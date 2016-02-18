@@ -8,7 +8,23 @@
             apiBaseUrl: String,
             apiRelativeUrl: String,
             queryParams: Array,
-            authToken: String
+            authToken: String,
+            loading: Boolean,
+            lastRequest: {
+                type: Object,
+                notify: true,
+                readOnly: true
+            },
+            lastResponse: {
+                type: Object,
+                notify: true,
+                readOnly: true
+            },
+            lastError: {
+                type: Object,
+                notify: true,
+                readOnly: true
+            }
         },
 
         _getUrl: function(){  

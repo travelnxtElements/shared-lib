@@ -38,7 +38,7 @@
             return this.apiBaseUrl +  this.apiRelativeUrl + '?token=' + this.authToken;
         },
 
-        _validateData: function(){
+        _validateApiMeta: function(){            
             if(!this.apiBaseUrl){
                 console.error('apiBaseUrl can\'t be empty');
                 return false;

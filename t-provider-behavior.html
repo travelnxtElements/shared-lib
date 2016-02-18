@@ -5,21 +5,54 @@
     TravelNxt.Behaviors = TravelNxt.Behaviors || {};
     TravelNxt.Behaviors.ProviderBehavior = {
         properties: {
+            /*
+            API base url. Ex http://demo.travelnxt.com
+             */
             apiBaseUrl: String,
+            /*
+            API relative url. Ex /api/hotel/search
+             */
             apiRelativeUrl: String,
+            /*
+            Key values to be set in api url query string
+             */
             queryParams: Array,
+            /*
+            API authentication token, this will be appended to url as per Mystique standards
+             */
             authToken: String,
+            /*
+            API in progress stage
+             */
             loading: Boolean,
-            lastRequest: {
-                type: Object,
-                notify: true,
-                readOnly: true
-            },
+
+
+            /*
+            Most recent request's API success response
+             */
             lastResponse: {
                 type: Object,
                 notify: true,
                 readOnly: true
             },
+
+            
+            /*
+            Most recent request's API error or network error
+            Translate all network errors to below given format
+            Sample error object
+            {
+                "code": Number,
+                "message": String,
+                "additionalMessages": [
+                  {
+                    "description": String,
+                    "code": Number,
+                    "message": String
+                  }
+                ]
+            }
+             */
             lastError: {
                 type: Object,
                 notify: true,

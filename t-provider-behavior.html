@@ -24,11 +24,16 @@
             /*
             API in progress stage
              */
-            loading: Boolean,
+            loading: {
+                type: Boolean,
+                notify: true,
+                readOnly: true,
+                value: false
+            },
 
 
             /*
-            Most recent request's API success response
+            Most recent request's API success response, not iron-ajax last response
              */
             lastResponse: {
                 type: Object,
@@ -38,7 +43,7 @@
 
             
             /*
-            Most recent request's API error or network error
+            Most recent request's API error or network error, not iron-ajax last response
             Translate all network errors to below given format
             Sample error object
             {

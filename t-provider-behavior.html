@@ -24,7 +24,11 @@ TravelNxt.Behaviors.ProviderBehavior = {
         /*
         API in progress stage
          */
-        loading: Boolean,
+        loading: {
+            type: Boolean,
+            notify: true,
+            readOnly: true
+        },
 
 
         /*
@@ -131,17 +135,35 @@ TravelNxt.Behaviors.ProviderBehavior = {
         if (!this.nodeName)
             console.error('node name not found!');
 
-        if (!event.detail.response || !event.detail.response.status || event.detail.response.status.code == 500)
-            this.fire(this.nodeName.toLowerCase() + '-error', {
+        var error = null;
+        var success = null;    
+
+        if (!event.detail.response || !event.detail.response.status || event.detail.response.status.code == 500){
+
+            error = {
                 message: 'Operation error occured, please try again.',
                 code: 500
-            });
-        else if (!event.detail.response.status.isSuccessful) {
-            this.fire(this.nodeName.toLowerCase() + '-error', this._setErrorMessage(event.detail.response));
-        } else {
-            //do special handling as per api status codes
-            this.fire(this.nodeName.toLowerCase() + '-success', event.detail.response);
+            };
+            this.fire(this.nodeName.toLowerCase() + '-error', error);
+            
         }
+
+        else if (!event.detail.response.status.isSuccessful) {
+
+            error = this._setErrorMessage(event.detail.response);
+            this.fire(this.nodeName.toLowerCase() + '-error', error);
+
+        } else {
+            success = event.detail.response;
+            this.fire(this.nodeName.toLowerCase() + '-success', success);
+        }
+
+        if(error)
+            this._setLastError(error);
+        else if(success)
+            this._setLastResponse(success);
+
+        this._setLoading(false);
     },
 
     /*
@@ -156,11 +178,17 @@ TravelNxt.Behaviors.ProviderBehavior = {
         if (!this.nodeName)
             console.error('node name not found!');
 
-        this.fire(this.nodeName.toLowerCase() + '-error', {
+        var error = {
             message: 'Connection error occured, please try again.',
-            code: ''
-        });
-        console.error(this.nodeName.toLowerCase() + '-error', event.detail.error.stack);
+            code: event.detail.request.status
+        };
+
+        this._setLastError(error);
+        this._setLoading(false);
+
+        this.fire(this.nodeName.toLowerCase() + '-error', error);
+        console.error(this.nodeName.toLowerCase() + '-error', error);
+
     },
 
     /*

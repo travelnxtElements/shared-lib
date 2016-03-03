@@ -31,7 +31,7 @@ Polymer({
         //validate API meta before making a call
         if (this._validateApiMeta()) {
             this.$.ajaxCall.url = this._getUrl();
-            this.$.ajaxCall.body = JJSON.stringify(this.orderRequest);
+            this.$.ajaxCall.body = JSON.stringify(this.orderRequest);
             this._setLoading(true);
             this.$.ajaxCall.generateRequest();
         }

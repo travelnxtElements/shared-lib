@@ -1,0 +1,58 @@
+_
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../t-shared-lib/t-provider-behavior.html">
+<dom-module id="t-shopping-cart-api">
+    <template>
+        <iron-ajax id="ajaxCall" method="GET" content-type="application/json" handle-as="json" verbose>
+        </iron-ajax>
+    </template>
+</dom-module>
+<script>
+Polymer({
+    is: "t-shopping-cart-api",
+
+    behaviors: [TravelNxt.Behaviors.ProviderBehavior],
+
+    properties: {
+    },
+
+    listeners: {
+        'ajaxCall.response': '_successCallback',
+        'ajaxCall.error': '_errorCallback'
+    },
+
+    /*
+    Authenticates user with given username and password
+     */
+    getShoppingCart: function() {
+        //validate API meta before making a call
+        if (this._validateApiMeta()) {
+            this.$.ajaxCall.url = this._getUrl();
+            this._setLoading(true);
+            this.$.ajaxCall.generateRequest();
+        }
+    },
+
+    /*
+    Callback for t-sign-in-authenticate event from UI component
+     */
+    onGetShoppingCart: function(e) {
+        this.authenticate();
+    },
+
+    /*
+    Callback for authenticate iron ajax success evnt
+     */
+    _successCallback: function(event) {
+        this._successHandler(event);
+    },
+
+    /*
+    Callback for authenticate iron ajax success evnt
+     */
+    _errorCallback: function(event) {
+        this._errorHandler(event);
+    }
+});
+</script>

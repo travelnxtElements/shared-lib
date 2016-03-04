@@ -14,9 +14,9 @@ Polymer({
     behaviors: [TravelNxt.Behaviors.ProviderBehavior],
 
     properties: {
-    	orderRequest:{
-    		type:Object
-    	}
+        paymentDetails: {
+            type: Object
+        }
     },
 
     listeners: {
@@ -27,21 +27,28 @@ Polymer({
     /*
     Authenticates user with given username and password
      */
-    pay: function() {
+    pay: function(paymentDetails) {
         //validate API meta before making a call
-        if (this._validateApiMeta()) {
-            this.$.ajaxCall.url = this._getUrl();
-            this.$.ajaxCall.body = JSON.stringify(this.orderRequest);
-            this._setLoading(true);
-            this.$.ajaxCall.generateRequest();
-        }
+
+        if (!this.paymentDetails)
+            this.paymentDetails = paymentDetails;
+
+        if (!this._validateApiMeta() || !this.paymentDetails)
+            return;
+
+        var orderRequest = this._constructOrderRequest(this.paymentDetails);
+        
+        this.$.ajaxCall.url = this._getUrl();
+        this.$.ajaxCall.body = JSON.stringify(orderRequest);
+        this._setLoading(true);
+        this.$.ajaxCall.generateRequest();
     },
 
     /*
     Callback for t-sign-in-authenticate event from UI component
      */
     onPay: function(e) {
-    	this.orderRequest = event.detail.orderRequest;
+        this.paymentDetails = event.detail.paymentDetails;
         this.pay();
     },
 
@@ -57,6 +64,132 @@ Polymer({
      */
     _errorCallback: function(event) {
         this._errorHandler(event);
+    },
+
+    _constructOrderRequest: function(paymentDetails) {
+        return {
+            passengers: getTranslatedPassengers(paymentDetails.flightPassengerDetails.Passengers, paymentDetails.flightPassengerDetails.FrequentFlyerDetails),
+            inventoriesInfo: getInventoriesInfo(paymentDetails.flightPassengerDetails, paymentDetails.ebtDevicePrint, paymentDetails.screenShot),
+            insuranceInfo: getInsuranceInfo(paymentDetails.flightPassengerDetails.inventory),
+            payments: getPaymentsInfo(paymentDetails.orderRequest),
+            pointOfContact: {
+                email: templatizer.email,
+                phone: templatizer.phone
+            }
+        }
+    },
+
+    _getTranslatedPassengers: function(passengers, frequentFlyerDetails) {
+        var passengerList = [];
+
+        if (!passengers || !passengers.length)
+            return passengerList;
+
+        for (var i = 0; i < passengers.length; i++) {
+            var passenger = {
+                id: passengers[i].Id,
+                firstName: passengers[i].FirstName,
+                middleName: passengers[i].MiddleName,
+                lastName: passengers[i].LastName,
+                gender: passengers[i].GenderString,
+                suffix: passengers[i].Suffix,
+                dateOfBirth: passengers[i].DateOfBirth,
+                redressNumber: passengers[i].RedressNumber,
+                emailAddress: passengers[i].EmailId,
+                phoneNumber: passengers[i].PhoneNumber,
+                type: "Adult",
+                memberships: getMemberships(passengers[i].Id, frequentFlyerDetails)
+            }
+
+            passengerList.push(passenger);
+        }
+
+        return passengerList;
+    },
+
+    _getMemberships: function(passengerId, frequentFlyerDetails) {
+        var passengerMemberships = [];
+
+        if (!frequentFlyerDetails || !frequentFlyerDetails.length)
+            return passengerMemberships;
+
+        for (var i = 0; i < frequentFlyerDetails.length; i++) {
+            if (frequentFlyerDetails[i].paxId === passengerId)
+                passengerMemberships.push({
+                    code: frequentFlyerDetails[i].FrequentFlyerNumber,
+                    productType: "flight",
+                    providerCode: frequentFlyerDetails[i].LoyaltyProgramCode,
+                    providerName: frequentFlyerDetails[i].LoyaltyProgramName
+                });
+        }
+
+        return passengerMemberships;
+    },
+
+    _getInventoriesInfo: function(flightPassengerDetails, deviceprintSting, screenShot) {
+        var rateInventoryInfo = {
+            passengerIds: [],
+            paymentIds: [2],
+            id: "0",
+            leadPassengerId: 0,
+            attributes: getInventoryAttributes(deviceprintSting, screenShot)
+        };
+
+        for (var i = 0; i < flightPassengerDetails.Passengers.length; i++) {
+            rateInventoryInfo.passengerIds.push(flightPassengerDetails.Passengers[i].Id);
+        }
+
+        return [rateInventoryInfo];
+    },
+
+    _getInventoryAttributes: function(deviceprintSting, screenShot) {
+        var attrGroup = {
+            name: 'Pos',
+            keyValuePairs: [{
+                key: 'EBT_DEVICEPRINT',
+                value: deviceprintSting
+            }, {
+                key: 'ScreenShotUrl',
+                value: screenShot || ''
+            }, {
+                key: 'DealerUrl',
+                value: location.host
+            }]
+        };
+
+        return [attrGroup];
+    },
+
+    _getInsuranceInfo: function(inventory) {
+        return [{
+            referenceInventoryId: inventory.id,
+            insuranceId: '0'
+        }];
+    },
+
+    _getPaymentsInfo: function(orderRequest) {
+        if (!orderRequest)
+            return null;
+
+        return [{
+            number: orderRequest.payments[0].number,
+            securityCode: orderRequest.payments[0].securityCode,
+            nameOnCard: orderRequest.payments[0].nameOnCard,
+            expiryMonth: orderRequest.payments[0].expiryMonth,
+            expiryYear: orderRequest.payments[0].expiryYear,
+            type: "CreditCard", //TODO remove hardcoding
+            id: 2,
+            billingAddress: {
+                line1: orderRequest.payments[0].billingAddress.line1,
+                line2: orderRequest.payments[0].billingAddress.line2,
+                type: orderRequest.payments[0].billingAddress.type,
+                country: orderRequest.payments[0].billingAddress.country,
+                state: orderRequest.payments[0].billingAddress.state,
+                city: orderRequest.payments[0].billingAddress.city,
+                zipCode: orderRequest.payments[0].billingAddress.zipCode,
+                phoneNumber: orderRequest.payments[0].billingAddress.phoneNumber
+            }
+        }];
     }
 });
 </script>

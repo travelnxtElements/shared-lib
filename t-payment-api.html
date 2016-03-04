@@ -36,10 +36,8 @@ Polymer({
         if (!this._validateApiMeta() || !this.paymentDetails)
             return;
 
-        var orderRequest = this._constructOrderRequest(this.paymentDetails);
-        
         this.$.ajaxCall.url = this._getUrl();
-        this.$.ajaxCall.body = JSON.stringify(orderRequest);
+        this.$.ajaxCall.body = JSON.stringify(this._constructOrderRequest(this.paymentDetails));
         this._setLoading(true);
         this.$.ajaxCall.generateRequest();
     },
@@ -66,21 +64,19 @@ Polymer({
         this._errorHandler(event);
     },
 
-    _constructOrderRequest: function(paymentDetails) {
+    _constructOrderRequest: function() {
         return {
-            passengers: getTranslatedPassengers(paymentDetails.flightPassengerDetails.Passengers, paymentDetails.flightPassengerDetails.FrequentFlyerDetails),
-            inventoriesInfo: getInventoriesInfo(paymentDetails.flightPassengerDetails, paymentDetails.ebtDevicePrint, paymentDetails.screenShot),
-            insuranceInfo: getInsuranceInfo(paymentDetails.flightPassengerDetails.inventory),
-            payments: getPaymentsInfo(paymentDetails.orderRequest),
-            pointOfContact: {
-                email: templatizer.email,
-                phone: templatizer.phone
-            }
+            insuranceInfo: this._getInsuranceInfo(),
+            inventoriesInfo: this._getInventoriesInfo(),
+            passengers: this._getTranslatedPassengers(),
+            payments: this._getPaymentsInfo(),
+            pointOfContact: this.paymentDetails.pointOfContact
         }
     },
 
-    _getTranslatedPassengers: function(passengers, frequentFlyerDetails) {
+    _getTranslatedPassengers: function() {
         var passengerList = [];
+        var passengers = this.paymentDetails.passengers;
 
         if (!passengers || !passengers.length)
             return passengerList;
@@ -88,6 +84,7 @@ Polymer({
         for (var i = 0; i < passengers.length; i++) {
             var passenger = {
                 id: passengers[i].Id,
+                title: passengers[i].title,
                 firstName: passengers[i].FirstName,
                 middleName: passengers[i].MiddleName,
                 lastName: passengers[i].LastName,
@@ -97,8 +94,8 @@ Polymer({
                 redressNumber: passengers[i].RedressNumber,
                 emailAddress: passengers[i].EmailId,
                 phoneNumber: passengers[i].PhoneNumber,
-                type: "Adult",
-                memberships: getMemberships(passengers[i].Id, frequentFlyerDetails)
+                type: passengers[i].Type,
+                memberships: this._getMemberships(passengers[i].Id)
             }
 
             passengerList.push(passenger);
@@ -107,8 +104,9 @@ Polymer({
         return passengerList;
     },
 
-    _getMemberships: function(passengerId, frequentFlyerDetails) {
+    _getMemberships: function(passengerId) {
         var passengerMemberships = [];
+        var frequentFlyerDetails = this.paymentDetails.frequentFlyerDetails;
 
         if (!frequentFlyerDetails || !frequentFlyerDetails.length)
             return passengerMemberships;
@@ -116,6 +114,7 @@ Polymer({
         for (var i = 0; i < frequentFlyerDetails.length; i++) {
             if (frequentFlyerDetails[i].paxId === passengerId)
                 passengerMemberships.push({
+                    type: frequentFlyerDetails[i].Type,
                     code: frequentFlyerDetails[i].FrequentFlyerNumber,
                     productType: "flight",
                     providerCode: frequentFlyerDetails[i].LoyaltyProgramCode,
@@ -126,31 +125,35 @@ Polymer({
         return passengerMemberships;
     },
 
-    _getInventoriesInfo: function(flightPassengerDetails, deviceprintSting, screenShot) {
+    _getInventoriesInfo: function() {
         var rateInventoryInfo = {
+            id: "0",
             passengerIds: [],
             paymentIds: [2],
-            id: "0",
             leadPassengerId: 0,
-            attributes: getInventoryAttributes(deviceprintSting, screenShot)
+            attributes: this._getInventoryAttributes(),
+            paymentBreakups: null
         };
 
-        for (var i = 0; i < flightPassengerDetails.Passengers.length; i++) {
-            rateInventoryInfo.passengerIds.push(flightPassengerDetails.Passengers[i].Id);
+        for (var i = 0; i < this.paymentDetails.passengers.length; i++) {
+            rateInventoryInfo.passengerIds.push(this.paymentDetails.passengers[i].Id);
         }
 
         return [rateInventoryInfo];
     },
 
-    _getInventoryAttributes: function(deviceprintSting, screenShot) {
+    _getInventoryAttributes: function() {
+
+        var payment = this.paymentDetails.payments[0];
+
         var attrGroup = {
             name: 'Pos',
             keyValuePairs: [{
                 key: 'EBT_DEVICEPRINT',
-                value: deviceprintSting
+                value: payment.deviceprintSting
             }, {
                 key: 'ScreenShotUrl',
-                value: screenShot || ''
+                value: payment.screenShot || ''
             }, {
                 key: 'DealerUrl',
                 value: location.host
@@ -160,34 +163,34 @@ Polymer({
         return [attrGroup];
     },
 
-    _getInsuranceInfo: function(inventory) {
+    _getInsuranceInfo: function() {
         return [{
-            referenceInventoryId: inventory.id,
+            referenceInventoryId: this.paymentDetails.inventory.id,
             insuranceId: '0'
         }];
     },
 
-    _getPaymentsInfo: function(orderRequest) {
-        if (!orderRequest)
-            return null;
+    _getPaymentsInfo: function() {
+
+        var payment = this.paymentDetails.payments[0];
 
         return [{
-            number: orderRequest.payments[0].number,
-            securityCode: orderRequest.payments[0].securityCode,
-            nameOnCard: orderRequest.payments[0].nameOnCard,
-            expiryMonth: orderRequest.payments[0].expiryMonth,
-            expiryYear: orderRequest.payments[0].expiryYear,
+            number: payment.number,
+            securityCode: payment.securityCode,
+            nameOnCard: payment.nameOnCard,
+            expiryMonth: payment.expiryMonth,
+            expiryYear: payment.expiryYear,
             type: "CreditCard", //TODO remove hardcoding
             id: 2,
             billingAddress: {
-                line1: orderRequest.payments[0].billingAddress.line1,
-                line2: orderRequest.payments[0].billingAddress.line2,
-                type: orderRequest.payments[0].billingAddress.type,
-                country: orderRequest.payments[0].billingAddress.country,
-                state: orderRequest.payments[0].billingAddress.state,
-                city: orderRequest.payments[0].billingAddress.city,
-                zipCode: orderRequest.payments[0].billingAddress.zipCode,
-                phoneNumber: orderRequest.payments[0].billingAddress.phoneNumber
+                line1: payment.billingAddress.line1,
+                line2: payment.billingAddress.line2,
+                type: payment.billingAddress.type,
+                country: payment.billingAddress.country,
+                state: payment.billingAddress.state,
+                city: payment.billingAddress.city,
+                zipCode: payment.billingAddress.zipCode,
+                phoneNumber: payment.billingAddress.phoneNumber
             }
         }];
     }

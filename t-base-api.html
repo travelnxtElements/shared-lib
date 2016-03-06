@@ -1,0 +1,313 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+
+<!--
+Common API component to heavy lift API ajax call. It accepts all basic api info required to initiate a call like urls, tokens, translator to build API/UI objets. On attached event it gets registerd to UI components' event using 'eventName' value and does below functionality
+
+1. Upon UI event it triggers api ajax call by translating UI request object to API request
+2. Handles API success / error states with proper error code checks and also translates back API response to UI response
+3. Fires success / error events to UI components accordingly
+
+Success and failure event names follows below conventions -
+1. success event name  = eventName + '-api-success'
+2. failure event name  = eventName + '-api-error'
+
+It accepts errors codes set from global namespace 'Eva.APIErrorCodes'
+
+<b>Example</b>
+
+    <t-base-api id="baseAPI" loading={{loading}} api-base-url="{{API Base Url}}" api-relative-url="{{API Rel Url}}" event-name="{{UI Event Name}}" translator-type="{{Translator Namespace}}"></t-base-api>
+-->
+<dom-module id="t-base-api">
+    <template>
+        <iron-ajax id="ajaxCall" method="{{method}}" content-type="application/json" handle-as="json" verbose>
+        </iron-ajax>
+    </template>
+</dom-module>
+<script>
+Polymer({
+    is: "t-base-api",
+
+    listeners: {
+        'ajaxCall.response': '_successHandler',
+        'ajaxCall.error': '_errorHandler'
+    },
+
+    /**
+     * Fired when API call completes with no errors.
+     * @event eventName + '-api-success'
+     * @param {{status: Object, result: Object}} api response object
+     */
+    
+
+    /**
+     * Fired when API call throws error (both server or network error).
+     * @event eventName + '-api-error'
+     * @param {{code: Number, message: String}} object
+     */ 
+    
+    properties: {
+        /*
+        API base url. Ex http://demo.travelnxt.com
+         */
+        apiBaseUrl: String,
+        /*
+        API relative url. Ex /api/hotel/search
+         */
+        apiRelativeUrl: String,
+        /*
+        Key values to be set in api url query string
+         */
+        queryParams: Array,
+        /*
+        API authentication token, this will be appended to url as per Mystique standards
+         */
+        authToken: String,
+        /*
+        API in progress stage
+         */
+        loading: {
+            type: Boolean,
+            notify: true,
+            readOnly: true
+        },
+
+        /*
+        Name of the event to subscribe to and trigger API call
+         */
+        eventName:{
+            type: String,
+            value: 't-api'
+        },
+
+        /*
+        Name of translator available at global namespace to modify API request and response,         
+         */
+        translatorType: {
+            type: String,
+            value: '',
+            observer: '_onTranslatorTypeChange'
+        },
+
+        /*
+        Most recent request's API success response
+         */
+        lastResponse: {
+            type: Object,
+            notify: true,
+            readOnly: true
+        },
+
+        /*
+        Most recent request's API error or network error
+        Translate all network errors to below given format
+        Sample error object
+        {
+            "code": Number,
+            "message": String,
+            "additionalMessages": [
+              {
+                "description": String,
+                "code": Number,
+                "message": String
+              }
+            ]
+        }
+         */
+        lastError: {
+            type: Object,
+            notify: true,
+            readOnly: true
+        },
+
+        /*
+        API ajax call method Ex. GET, POST, PUT, DELETE
+         */
+        method: {
+            type:String,
+            value: 'GET'
+        },
+
+        /*
+        Translator instance built from given 'translatorType'
+         */
+        _translator: {
+            type: Object,
+            value: null
+        },
+
+        /*
+        Translated API request
+         */
+        _requestPayload:{
+            type: Object,
+            notify: true
+        },
+
+        /*
+        Reference of global 'Eva.APIErrorCodes' namespace
+        */
+        _errorCodes: {
+            type:Object,
+            value: null
+        },
+    },
+
+    attached: function(){
+        this._errorCodes = Eva.APIErrorCodes;
+        document.querySelector('body').addEventListener(this.eventName, this._onEvent.bind(this));
+    },
+
+    /*
+    Handler for given event type, performs pre call logic like build request etc
+     */
+    _onEvent: function(e){
+        if(this._translator && e.detail){
+            this._requestPayload = this._translator.buildRequest(e.detail);
+        }
+
+        if (this._validateApiMeta()) {
+            this.$.ajaxCall.url = this._getUrl();
+            this.$.ajaxCall.body = JSON.stringify(this._requestPayload);
+            this._setLoading(true);
+            this.$.ajaxCall.generateRequest();
+        }
+    },
+
+    /*
+    Identifies translator instance from given type
+     */
+    _onTranslatorTypeChange: function(){
+        if(!this.translatorType)
+            return;
+
+        try{
+            var tempEval =  new Function('return window.'+ this.translatorType);
+            this._translator = tempEval();
+        }
+        catch(e){
+            this._translator = null;
+        }
+    },
+
+    /*
+    Builds final API url using given base and relative urls + tokens / query strings given if any
+     */
+    _getUrl: function() {
+        //sanitize urls before use
+        if (!this.apiBaseUrl && this.apiBaseUrl.lastIndexOf('/') == this.apiBaseUrl.length - 1) {
+            this.set('apiBaseUrl', this.apiBaseUrl.substring(0, this.apiBaseUrl.length - 1));
+        }
+        if (!this.apiRelativeUrl && this.apiRelativeUrl.firstIndexOf('/') != 0) {
+            this.set('apiRelativeUrl', '/' + this.apiRelativeUrl);
+        }
+        return this.apiBaseUrl + this.apiRelativeUrl + '?token=' + this.authToken;
+    },
+
+    /*
+    Checks for api mandatory fields presence
+     */
+    _validateApiMeta: function() {
+        if (!this.apiBaseUrl) {
+            console.error('apiBaseUrl can\'t be empty');
+            return false;
+        } else if (!this.apiRelativeUrl) {
+            console.error('apiRelativeUrl can\'t be empty');
+            return false;
+        } else if (!this.authToken) {
+            console.error('authToken can\'t be empty');
+            return false;
+        }
+        return true;
+    },
+
+    /*
+    This method handles the success callback event handling.
+    It fires the success and faulure events with customized error messages
+    Success and failure event names follow following conventions -
+        1. success event name  = [component name] + '-api-success'
+        2. failure event name  = [component name] + '-api-error'
+    Expects ajax sussess event as a parameter & throws error if component name not found.
+    */
+    _successHandler: function(event) {
+
+        var error = null;
+        var success = null;    
+
+        if (!event.detail.response || !event.detail.response.status || event.detail.response.status.code == 500){
+
+            error = {
+                message: 'Operation error occured, please try again.',
+                code: 500
+            };
+            this.fire(this.eventName + '-api-error', error);
+            
+        }
+
+        else if (!event.detail.response.status.isSuccessful) {
+
+            error = this._getErrorMessage(event.detail.response);
+            this.fire(this.eventName + '-api-error', error);
+
+        } else {
+            success = event.detail.response;
+            if(this._translator){
+                success = this._translator.buildResponse(success);
+            }
+            this.fire(this.eventName + '-api-success', success);
+        }
+
+        if(error)
+            this._setLastError(error);
+        else if(success)
+            this._setLastResponse(success);
+
+        this._setLoading(false);
+    },
+
+    /*
+    This method handles the error callback event handling.
+    It fires the faulure event with customized error message & logs the error
+    Failure event name follows following convention -
+        2. failure event name  = [component name] + '-api-error'
+    Expects ajax error event as a parameter & throws error if component name not found.
+    */
+    _errorHandler: function(event) {
+        var error = {
+            message: 'Connection error occured, please try again.',
+            code: event.detail.request.status
+        };
+
+        this._setLastError(error);
+        this._setLoading(false);
+
+        this.fire(this.eventName + '-api-error', error);
+        console.error(this.eventName + '-api-error', error);
+
+    },
+
+    /*
+    This method returns current api response.
+    The response message will be set using errorCode property & error code sent in api response.
+    If error code is not found in the property, api message will be sent.
+    Failure message will be logged in case of no response.
+    */
+    _getErrorMessage: function(response) {
+
+        if (!response || !response.status || !this._errorCodes)
+            console.error('No api response or response status found!');
+
+        if (!this._errorCodes)
+            return {
+                code: response.status.code,
+                message: response.status.message
+            };
+
+        return {
+            code: response.status.code,
+            message: this._errorCodes[response.status.code] || response.status.message
+        };
+    }    
+  
+  });
+</script>

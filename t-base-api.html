@@ -47,24 +47,24 @@ Polymer({
      */ 
     
     properties: {
-        /*
-        API base url. Ex http://demo.travelnxt.com
+        /**
+         * API base url. Ex http://demo.travelnxt.com
          */
         apiBaseUrl: String,
-        /*
-        API relative url. Ex /api/hotel/search
+        /**
+         * API relative url. Ex /api/hotel/search
          */
         apiRelativeUrl: String,
-        /*
-        Key values to be set in api url query string
+        /**
+         * Key values to be set in api url query string
          */
         queryParams: Array,
-        /*
-        API authentication token, this will be appended to url as per Mystique standards
+        /**
+         * API authentication token, this will be appended to url as per Mystique standards
          */
         authToken: String,
-        /*
-        API in progress stage
+        /**
+         * API in progress stage
          */
         loading: {
             type: Boolean,
@@ -72,25 +72,25 @@ Polymer({
             readOnly: true
         },
 
-        /*
-        Name of the event to subscribe to and trigger API call
-         */
+        /**
+        * Name of the event to subscribe to and trigger API call
+        **/
         eventName:{
             type: String,
             value: 't-api'
         },
 
-        /*
-        Name of translator available at global namespace to modify API request and response,         
-         */
+        /**
+         * Name of translator available at global namespace to modify API request and response,         
+         **/
         translatorType: {
             type: String,
             value: '',
             observer: '_onTranslatorTypeChange'
         },
 
-        /*
-        Most recent request's API success response
+        /**
+         * Most recent request's API success response
          */
         lastResponse: {
             type: Object,
@@ -98,10 +98,10 @@ Polymer({
             readOnly: true
         },
 
-        /*
-        Most recent request's API error or network error
-        Translate all network errors to below given format
-        Sample error object
+        /**
+         * Most recent request's API error or network error
+         * Translate all network errors to below given format
+         * Sample error object
         {
             "code": Number,
             "message": String,
@@ -120,33 +120,33 @@ Polymer({
             readOnly: true
         },
 
-        /*
-        API ajax call method Ex. GET, POST, PUT, DELETE
+        /**
+         * API ajax call method Ex. GET, POST, PUT, DELETE
          */
         method: {
             type:String,
             value: 'GET'
         },
 
-        /*
-        Translator instance built from given 'translatorType'
+        /**
+         * Translator instance built from given 'translatorType'
          */
         _translator: {
             type: Object,
             value: null
         },
 
-        /*
-        Translated API request
+        /**
+         * Translated API request
          */
         _requestPayload:{
             type: Object,
             notify: true
         },
 
-        /*
-        Reference of global 'Eva.APIErrorCodes' namespace
-        */
+        /**
+         * Reference of global 'Eva.APIErrorCodes' namespace
+         */
         _errorCodes: {
             type:Object,
             value: null
@@ -158,8 +158,8 @@ Polymer({
         document.querySelector('body').addEventListener(this.eventName, this._onEvent.bind(this));
     },
 
-    /*
-    Handler for given event type, performs pre call logic like build request etc
+    /**
+     * Handler for given event type, performs pre call logic like build request etc
      */
     _onEvent: function(e){
         if(this._translator && e.detail){
@@ -174,8 +174,8 @@ Polymer({
         }
     },
 
-    /*
-    Identifies translator instance from given type
+    /**
+     * Identifies translator instance from given type
      */
     _onTranslatorTypeChange: function(){
         if(!this.translatorType)
@@ -190,8 +190,8 @@ Polymer({
         }
     },
 
-    /*
-    Builds final API url using given base and relative urls + tokens / query strings given if any
+    /**
+     * Builds final API url using given base and relative urls + tokens / query strings given if any
      */
     _getUrl: function() {
         //sanitize urls before use
@@ -204,8 +204,8 @@ Polymer({
         return this.apiBaseUrl + this.apiRelativeUrl + '?token=' + this.authToken;
     },
 
-    /*
-    Checks for api mandatory fields presence
+    /**
+     * Checks for api mandatory fields presence
      */
     _validateApiMeta: function() {
         if (!this.apiBaseUrl) {
@@ -221,14 +221,14 @@ Polymer({
         return true;
     },
 
-    /*
-    This method handles the success callback event handling.
-    It fires the success and faulure events with customized error messages
-    Success and failure event names follow following conventions -
-        1. success event name  = [component name] + '-api-success'
-        2. failure event name  = [component name] + '-api-error'
-    Expects ajax sussess event as a parameter & throws error if component name not found.
-    */
+    /**
+     * This method handles the success callback event handling.
+     * It fires the success and faulure events with customized error messages
+     * Success and failure event names follow following conventions -
+         * 1. success event name  = [component name] + '-api-success'
+         * 2. failure event name  = [component name] + '-api-error'
+     * Expects ajax sussess event as a parameter & throws error if component name not found.
+     */
     _successHandler: function(event) {
 
         var error = null;
@@ -265,13 +265,13 @@ Polymer({
         this._setLoading(false);
     },
 
-    /*
-    This method handles the error callback event handling.
-    It fires the faulure event with customized error message & logs the error
-    Failure event name follows following convention -
-        2. failure event name  = [component name] + '-api-error'
-    Expects ajax error event as a parameter & throws error if component name not found.
-    */
+    /**
+     * This method handles the error callback event handling.
+     * It fires the faulure event with customized error message & logs the error
+     * Failure event name follows following convention -
+         * 1. failure event name  = [component name] + '-api-error'
+     * Expects ajax error event as a parameter & throws error if component name not found.
+     */
     _errorHandler: function(event) {
         var error = {
             message: 'Connection error occured, please try again.',
@@ -286,12 +286,12 @@ Polymer({
 
     },
 
-    /*
-    This method returns current api response.
-    The response message will be set using errorCode property & error code sent in api response.
-    If error code is not found in the property, api message will be sent.
-    Failure message will be logged in case of no response.
-    */
+    /**
+     * This method returns current api response.
+     * The response message will be set using errorCode property & error code sent in api response.
+     * If error code is not found in the property, api message will be sent.
+     * Failure message will be logged in case of no response.
+     */
     _getErrorMessage: function(response) {
 
         if (!response || !response.status || !this._errorCodes)

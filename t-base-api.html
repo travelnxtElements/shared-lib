@@ -1,30 +1,30 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../iron-ajax/iron-ajax.html">
-
+<link rel="import" href="../iron-meta/iron-meta.html">
+<link rel="import" href="../t-sessionstorage/t-sessionstorage.html">
 <!--
-Common API component to heavy lift API ajax call. It accepts all basic api info required to initiate a call like urls, tokens, translator to build API/UI objets. On attached event it gets registerd to UI components' event using 'eventName' value and does below functionality
+API component to heavy lift API ajax call with below features 
 
-1. Upon UI event it triggers api ajax call by translating UI request object to API request
-2. Handles API success / error states with proper error code checks and also translates back API response to UI response
-3. Fires success / error events to UI components accordingly
+1. Auth token availability check and generate one if is not available already(takes care of multiple api instances to avoid duplcate token generation calls and also persists in session for future usage)
+2. Subscribes to UI event `eventName` and triggers API ajax call upon that event.
+3. Handles API/UI request and response translation through `translatorType`.
+4. Handles API error codes using global `Eva.APIErrorCodes` namespace.
+5. Updates UI component about API success/failure through events.
 
-Success and failure event names follows below conventions -
-1. success event name  = eventName + '-api-success'
-2. failure event name  = eventName + '-api-error'
-
-It accepts errors codes set from global namespace 'Eva.APIErrorCodes'
-
-<b>Example</b>
+<b>Example</b>    
 
     <t-base-api id="baseAPI" loading={{loading}} api-base-url="{{API Base Url}}" api-relative-url="{{API Rel Url}}" event-name="{{UI Event Name}}" translator-type="{{Translator Namespace}}"></t-base-api>
 -->
 <dom-module id="t-base-api">
     <template>
+        <t-sessionstorage id="authSession" key="authToken" in-progress="{{sessionInProgress}}" api-url-format="_getIronMeta('globals')" auto on-t-sessionstorage-load-success="_onSessionTokenLoad" on-t-sessionstorage-load-error="_onSessionTokenLoad"></t-sessionstorage>
         <iron-ajax id="ajaxCall" method="{{method}}" content-type="application/json" handle-as="json" verbose>
         </iron-ajax>
     </template>
 </dom-module>
 <script>
+var _tempMeta = null;
+
 Polymer({
     is: "t-base-api",
 
@@ -34,18 +34,31 @@ Polymer({
     },
 
     /**
+     * Fired when authentication completes with no errors.
+     * @event 't-auth-api-success'
+     * @param {{status: Object, authenticationToken: String}} api response object
+     */
+
+
+    /**
+     * Fired when authentication fails with errors.
+     * @event 't-auth-api-error'
+     * @param {{code: Object, message: String}} object
+     */
+
+    /**
      * Fired when API call completes with no errors.
      * @event eventName + '-api-success'
      * @param {{status: Object, result: Object}} api response object
      */
-    
+
 
     /**
      * Fired when API call throws error (both server or network error).
      * @event eventName + '-api-error'
      * @param {{code: Number, message: String}} object
-     */ 
-    
+     */
+
     properties: {
         /**
          * API base url. Ex http://demo.travelnxt.com
@@ -60,10 +73,6 @@ Polymer({
          */
         queryParams: Array,
         /**
-         * API authentication token, this will be appended to url as per Mystique standards
-         */
-        authToken: String,
-        /**
          * API in progress stage
          */
         loading: {
@@ -73,9 +82,9 @@ Polymer({
         },
 
         /**
-        * Name of the event to subscribe to and trigger API call
-        **/
-        eventName:{
+         * Name of the event to subscribe to and trigger API call
+         **/
+        eventName: {
             type: String,
             value: 't-api'
         },
@@ -124,7 +133,7 @@ Polymer({
          * API ajax call method Ex. GET, POST, PUT, DELETE
          */
         method: {
-            type:String,
+            type: String,
             value: 'GET'
         },
 
@@ -139,7 +148,7 @@ Polymer({
         /**
          * Translated API request
          */
-        _requestPayload:{
+        _requestPayload: {
             type: Object,
             notify: true
         },
@@ -148,21 +157,59 @@ Polymer({
          * Reference of global 'Eva.APIErrorCodes' namespace
          */
         _errorCodes: {
-            type:Object,
+            type: Object,
             value: null
         },
+
+        /**
+         * If true, indicates it has got auth token and is ready to handle ajax requests.
+         * @return {[type]} [description]
+         */
+        ready: {
+          type: Boolean,
+          value: false,
+          readOnly: true
+        }
+
     },
 
-    attached: function(){
-        this._errorCodes = Eva.APIErrorCodes;
-        document.querySelector('body').addEventListener(this.eventName, this._onEvent.bind(this));
+    attached: function() {
+        //1
+        this._loadErrorCodes();
+        //2
+        this._registerToUIEvent();
     },
 
     /**
-     * Handler for given event type, performs pre call logic like build request etc
+     * Checks and accepts global 'Eva.APIErrorCodes' namespace if any
      */
-    _onEvent: function(e){
-        if(this._translator && e.detail){
+    _loadErrorCodes: function() {
+        if (window.Eva && window.Eva.APIErrorCodes) {
+            this._errorCodes = window.Eva.APIErrorCodes;
+        }
+    },
+
+    /**
+     * Auto subscribes to given UI event using 'eventName'
+     */
+    _registerToUIEvent: function() {
+        if(this.eventName){
+          document.querySelector('body').addEventListener(this.eventName, this._onUIEvent.bind(this));
+        }
+    },
+
+    /**
+     * Handler for given event type, when ever event of type 'eventName' fires it checks and waits for auth token and once it is * avaialable, it will proceed by translating UI model to API model if any translator is supplied.
+     * 
+     */
+    _onUIEvent: function(e) {
+
+        if(!this.ready){
+          setTimeout(function(){ this._onUIEvent(e)}.bind(this), 500);
+          return;
+        }
+
+        if (this._translator && e.detail) {
             this._requestPayload = this._translator.buildRequest(e.detail);
         }
 
@@ -175,17 +222,16 @@ Polymer({
     },
 
     /**
-     * Identifies translator instance from given type
+     * Observer for 'translatorType' and loads proper instance as per given type
      */
-    _onTranslatorTypeChange: function(){
-        if(!this.translatorType)
+    _onTranslatorTypeChange: function() {
+        if (!this.translatorType)
             return;
 
-        try{
-            var tempEval =  new Function('return window.'+ this.translatorType);
+        try {
+            var tempEval = new Function('return window.' + this.translatorType);
             this._translator = tempEval();
-        }
-        catch(e){
+        } catch (e) {
             this._translator = null;
         }
     },
@@ -201,7 +247,7 @@ Polymer({
         if (!this.apiRelativeUrl && this.apiRelativeUrl.firstIndexOf('/') != 0) {
             this.set('apiRelativeUrl', '/' + this.apiRelativeUrl);
         }
-        return this.apiBaseUrl + this.apiRelativeUrl + '?token=' + this.authToken;
+        return this.apiBaseUrl + this.apiRelativeUrl + '?token=' + this._getIronMeta('globals').byKey('authToken');
     },
 
     /**
@@ -209,13 +255,13 @@ Polymer({
      */
     _validateApiMeta: function() {
         if (!this.apiBaseUrl) {
-            console.error('apiBaseUrl can\'t be empty');
+            console.log('apiBaseUrl can\'t be empty');
             return false;
         } else if (!this.apiRelativeUrl) {
-            console.error('apiRelativeUrl can\'t be empty');
+            console.log('apiRelativeUrl can\'t be empty');
             return false;
-        } else if (!this.authToken) {
-            console.error('authToken can\'t be empty');
+        } else if (!this._getIronMeta('globals').byKey('authToken')) {
+            console.log('authToken can\'t be empty');
             return false;
         }
         return true;
@@ -225,41 +271,41 @@ Polymer({
      * This method handles the success callback event handling.
      * It fires the success and faulure events with customized error messages
      * Success and failure event names follow following conventions -
-         * 1. success event name  = [component name] + '-api-success'
-         * 2. failure event name  = [component name] + '-api-error'
+     * 1. success event name  = [component name] + '-api-success'
+     * 2. failure event name  = [component name] + '-api-error'
      * Expects ajax sussess event as a parameter & throws error if component name not found.
      */
     _successHandler: function(event) {
 
         var error = null;
-        var success = null;    
+        var success = null;
 
-        if (!event.detail.response || !event.detail.response.status || event.detail.response.status.code == 500){
+        if (!event.detail.response || !event.detail.response.status || event.detail.response.status.code == 500) {
 
             error = {
                 message: 'Operation error occured, please try again.',
                 code: 500
             };
             this.fire(this.eventName + '-api-error', error);
-            
-        }
+            console.error(this.eventName + '-api-error', error);
 
-        else if (!event.detail.response.status.isSuccessful) {
+        } else if (!event.detail.response.status.isSuccessful) {
 
             error = this._getErrorMessage(event.detail.response);
             this.fire(this.eventName + '-api-error', error);
+            console.error(this.eventName + '-api-error', error);
 
         } else {
             success = event.detail.response;
-            if(this._translator){
+            if (this._translator) {
                 success = this._translator.buildResponse(success);
             }
             this.fire(this.eventName + '-api-success', success);
         }
 
-        if(error)
+        if (error)
             this._setLastError(error);
-        else if(success)
+        else if (success)
             this._setLastResponse(success);
 
         this._setLoading(false);
@@ -269,7 +315,7 @@ Polymer({
      * This method handles the error callback event handling.
      * It fires the faulure event with customized error message & logs the error
      * Failure event name follows following convention -
-         * 1. failure event name  = [component name] + '-api-error'
+     * 1. failure event name  = [component name] + '-api-error'
      * Expects ajax error event as a parameter & throws error if component name not found.
      */
     _errorHandler: function(event) {
@@ -307,7 +353,132 @@ Polymer({
             code: response.status.code,
             message: this._errorCodes[response.status.code] || response.status.message
         };
-    }    
-  
-  });
+    },
+
+    /***********************Authentication part start***************************/
+
+
+    /**
+     * Session storage load event handler, it tries to generate token if is not available in session already.
+     */
+    _onSessionTokenLoad: function() {
+        if (!this.$.authSession.value) {
+            this._generateAuthToken();
+        }else{
+            this._setIronMeta('authToken', this.$.authSession.value, 'globals');
+            this._setReady(true);
+        }
+    },
+
+    /**
+     * Builds iron-ajax dynamically and trigger authentication API for auth token
+     */
+    _generateAuthToken: function() {
+        var authAjax = this._getIronMeta('globals').byKey('authAjax');
+        //check for multiple base api instances
+        if (!authAjax) {
+            var request = {
+                "Name": this._getIronMeta('globals').byKey('contextName'),
+                "CID": this._getIronMeta('globals').byKey('contextId')
+            };
+            authAjax = document.createElement('iron-ajax');
+            authAjax.body = JSON.stringify(request);
+            authAjax.method = 'POST';
+            authAjax.url = this._getAuthAPIUrl(this.apiBaseUrl);
+            authAjax.verbose = true;
+            authAjax.contentType = 'application/json';
+            authAjax.addEventListener('response', this._authSuccess.bind(this));
+            authAjax.addEventListener('error', this._authError.bind(this));
+            authAjax.generateRequest();
+            //persist for future reference
+            this._setIronMeta('authAjax', authAjax, 'globals');
+            this._setLoading(true);
+        }
+        else if(authAjax.loading || (!authAjax.lastError && !authAjax.lastResponse)){ //check for call from another instance not completed to attach event handlers
+            authAjax.addEventListener('response', function(){ this._setReady(true); }.bind(this));
+        }
+        else{
+            this._setReady(true);
+        }
+    },
+
+    _getIronMeta: function(type) {
+        if (_tempMeta) {
+            return _tempMeta;
+        } else {
+            _tempMeta = new Polymer.IronMeta({
+                type: type
+            });
+            return _tempMeta;
+        }
+    },
+
+    _setIronMeta: function(key, value, type) {
+        new Polymer.IronMeta({
+            type: type,
+            key: key,
+            value: value
+        })
+    },
+
+    /**
+     * Auth ajax success handler
+     */
+    _authSuccess: function(event) {
+        if (!event.detail.response || !event.detail.response.status) {
+            error = {
+                message: 'Operation error occured, please try again.',
+                code: 500
+            };
+            this.fire('t-auth-api-error', error);
+            console.error('t-auth-api-error', error);
+        } else if (!event.detail.response.status.isSuccessful) {
+            error = this._getErrorMessage(event.detail.response);
+            this.fire('t-auth-api-error', error);
+            console.error('t-auth-api-error', error);
+        } else {
+            success = event.detail.response;
+            this.fire('t-auth-api-success', success);
+            this._setIronMeta('authToken', success.authenticationToken, 'globals');
+            this._setReady(true);
+
+            //update session value for future checks/usage
+            this.$.authSession.value = success.authenticationToken;
+            this.$.authSession.save();  ///here ignoring save callbacks hoping all good :)
+        }
+
+        this._setLoading(false);
+    },
+
+    /**
+     * Auth ajax error handler
+     */
+    _authError: function(event) {
+        var error = {
+            message: 'Connection error occured, please try again.',
+            code: event.detail.request.status
+        };
+
+        this._setLoading(false);
+
+        this.fire('t-auth-api-error', error);
+        console.error('t-auth-api-error', error);
+    },    
+
+
+    /**
+     * Constructs authentication API url based on given 'apiBaseUrl'
+     */
+    _getAuthAPIUrl: function(apiBaseUrl) {
+        if (apiBaseUrl) {
+            if (apiBaseUrl.lastIndexOf('/') != apiBaseUrl.length - 1)
+                apiBaseUrl += '/';
+            apiBaseUrl += 'Authentication/authenticate/context';
+            return apiBaseUrl;
+        }
+    },
+
+    /***********************Authentication part start***************************/
+
+});
 </script>

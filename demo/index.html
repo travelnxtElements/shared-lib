@@ -1,0 +1,49 @@
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>        
+    <link rel="import" href="../t-base-api.html">
+    <link rel="import" href="../../iron-meta/iron-meta.html">    
+
+    <style>
+    t-air-search t-form{  
+        height: 100%;
+    }
+    </style>
+</head>
+
+<body>
+    <template is="dom-bind" id="domBindTemplate">    
+        <iron-meta key="contextName" value="mystiquedemo" type="globals"></iron-meta>
+
+        <t-base-api id="searchApi" loading={{loading}} method="POST" api-base-url="http://demo.travelnxt.com/api" api-relative-url="api/flight/search" event-name="t-air-search" translator-type="Eva.AirSearchAPITranslator"></t-base-api>
+
+        <t-base-api id="searchApi" loading={{loading}} method="POST" api-base-url="http://demo.travelnxt.com/api" api-relative-url="api/flight/search" event-name="t-air-search" translator-type="Eva.AirSearchAPITranslator"></t-base-api>
+        
+        <template is="dom-if" if="{{loading}}">
+            <div>API in-progress, wait..</div>
+        </template>
+        
+    </template>
+</body>
+<script>
+window.addEventListener('WebComponentsReady', function(e) {
+    var event = new Event('t-air-search');
+    document.querySelector('body').dispatchEvent(event);
+    
+    var apiComp = document.getElementById('searchApi');
+    
+    apiComp.addEventListener('t-auth-api-success', function(e){ alert('auth success - '+ e.detail.authenticationToken ) });
+    apiComp.addEventListener('t-auth-api-error', function(e){ alert('auth fail - '+ e.detail.message ) });
+
+    apiComp.addEventListener(apiComp.eventName + '-api-success', function(e){ alert('search success - '+ e.detail.searchId ) });
+    apiComp.addEventListener(apiComp.eventName + '-api-error', function(e){ alert('search failed - '+ e.detail.message) });
+
+});
+</script>
+
+</html>

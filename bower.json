@@ -1,33 +1,35 @@
 {
-    "name": "t-shared-lib",
-    "version": "0.0.0",
-    "authors": [
-        "Rahul Pilkhwal <rahul.pilkhwal@tavisca.com>",
-        "Shailesh Kumar Srivastava <ssrivastava@tavisca.com>",
-        "Sounak Pal <spal@tavisca.com>"
-    ],
-    "description": "",
-    "main": "",
-    "moduleType": [],
-    "keywords": [
-        "Polymer",
-        "Web",
-        "Components"
-    ],
-    "homepage": "",
-    "private": true,
-    "ignore": [
-        "**/.*",
-        "node_modules",
-        "bower_components",
-        "test",
-        "tests"
-    ],
-    "dependencies": {
-        "polymer": "Polymer/polymer#^1.0.0"
-    },
-    "devDependencies": {
-        "webcomponentsjs": "~0.7.14",
-        "iron-component-page": "PolymerElements/iron-component-page#~1.0.6"
-    }
+  "name": "t-shared-lib",
+  "version": "0.0.0",
+  "authors": [
+    "Rahul Pilkhwal <rahul.pilkhwal@tavisca.com>",
+    "Shailesh Kumar Srivastava <ssrivastava@tavisca.com>",
+    "Sounak Pal <spal@tavisca.com>"
+  ],
+  "description": "",
+  "main": "",
+  "moduleType": [],
+  "keywords": [
+    "Polymer",
+    "Web",
+    "Components"
+  ],
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.0.0",
+    "iron-meta": "PolymerElements/iron-meta#^1.1.1",
+    "t-sessionstorage": "travelnxtElements/t-sessionstorage#air-api-changes"
+  },
+  "devDependencies": {
+    "webcomponentsjs": "~0.7.14",
+    "iron-component-page": "PolymerElements/iron-component-page#~1.0.6"
+  }
 }

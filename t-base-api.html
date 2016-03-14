@@ -205,7 +205,7 @@ Polymer({
     _onUIEvent: function(e) {
 
         if(!this.ready){
-            document.querySelector('body').addEventListener('t-auth-api-success', this._onUIEvent(e)}.bind(this));
+            document.querySelector('body').addEventListener('t-auth-api-success', this._onUIEvent(e).bind(this));
             return;
         }
 

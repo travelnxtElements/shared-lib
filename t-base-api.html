@@ -3,7 +3,7 @@
 <link rel="import" href="../iron-meta/iron-meta.html">
 <link rel="import" href="../t-sessionstorage/t-sessionstorage.html">
 <!--
-API component to heavy lift API ajax call with below features 
+Low level API component to heavy lift API ajax call with below features 
 
 1. Auth token availability check and generate one if is not available already(takes care of multiple api instances to avoid duplcate token generation calls and also persists in session for future usage)
 2. Subscribes to UI event `eventName` and triggers API ajax call upon that event.
@@ -165,7 +165,7 @@ Polymer({
          * If true, indicates it has got auth token and is ready to handle ajax requests.
          * @return {[type]} [description]
          */
-        ready: {
+        isReady: {
           type: Boolean,
           value: false,
           readOnly: true
@@ -204,7 +204,7 @@ Polymer({
      */
     _onUIEvent: function(e) {
 
-        if(!this.ready){
+        if(!this.isReady){
             document.querySelector('body').addEventListener('t-auth-api-success', this._onUIEvent(e).bind(this));
             return;
         }
@@ -366,7 +366,7 @@ Polymer({
             this._generateAuthToken();
         }else{
             this._setIronMeta('authToken', this.$.authSession.value, 'globals');
-            this._setReady(true);
+            this._setIsReady(true);
             this.fire('t-auth-api-success', success);
         }
     },
@@ -396,10 +396,10 @@ Polymer({
             this._setLoading(true);
         }
         else if(authAjax.loading || (!authAjax.lastError && !authAjax.lastResponse)){ //check for call from another instance not completed to attach event handlers
-            authAjax.addEventListener('response', function(){ this._setReady(true); }.bind(this));
+            authAjax.addEventListener('response', function(){ this._setIsReady(true); }.bind(this));
         }
         else{
-            this._setReady(true);
+            this._setIsReady(true);
         }
     },
 
@@ -441,7 +441,7 @@ Polymer({
             success = event.detail.response;
             this.fire('t-auth-api-success', success);
             this._setIronMeta('authToken', success.authenticationToken, 'globals');
-            this._setReady(true);
+            this._setIsReady(true);
 
             //update session value for future checks/usage
             this.$.authSession.value = success.authenticationToken;

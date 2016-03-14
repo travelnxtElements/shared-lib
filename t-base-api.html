@@ -205,8 +205,8 @@ Polymer({
     _onUIEvent: function(e) {
 
         if(!this.ready){
-          setTimeout(function(){ this._onUIEvent(e)}.bind(this), 500);
-          return;
+            document.querySelector('body').addEventListener('t-auth-api-success', this._onUIEvent(e)}.bind(this));
+            return;
         }
 
         if (this._translator && e.detail) {
@@ -359,7 +359,7 @@ Polymer({
 
 
     /**
-     * Session storage load event handler, it tries to generate token if is not available in session already.
+     * Session storage load event handler, it tries to generate token if is not available in session already. If value is present then it loads in iron-meta and also fires `t-auth-api-success` event.
      */
     _onSessionTokenLoad: function() {
         if (!this.$.authSession.value) {
@@ -367,6 +367,7 @@ Polymer({
         }else{
             this._setIronMeta('authToken', this.$.authSession.value, 'globals');
             this._setReady(true);
+            this.fire('t-auth-api-success', success);
         }
     },
 

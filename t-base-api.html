@@ -36,7 +36,7 @@ Polymer({
     /**
      * Fired when authentication completes with no errors.
      * @event 't-auth-api-success'
-     * @param {{status: Object, authenticationToken: String}} api response object
+     * @param {{authToken}} String
      */
 
 
@@ -49,7 +49,7 @@ Polymer({
     /**
      * Fired when API call completes with no errors.
      * @event eventName + '-api-success'
-     * @param {{status: Object, result: Object}} api response object
+     * @param {{status: Object, result: Object}} object api response object
      */
 
 
@@ -169,6 +169,12 @@ Polymer({
           type: Boolean,
           value: false,
           readOnly: true
+        },
+
+        authToken: {
+            type: String,
+            readOnly: true,
+            notify: true
         }
 
     },
@@ -366,8 +372,9 @@ Polymer({
             this._generateAuthToken();
         }else{
             this._setIronMeta('authToken', this.$.authSession.value, 'globals');
+            this._setAuthToken(this.$.authSession.value);
             this._setIsReady(true);
-            this.fire('t-auth-api-success', success);
+            this.fire('t-auth-api-success', this.$.authSession.value);
         }
     },
 
@@ -439,9 +446,10 @@ Polymer({
             console.error('t-auth-api-error', error);
         } else {
             success = event.detail.response;
-            this.fire('t-auth-api-success', success);
+            this._setAuthToken(success.authenticationToken);
             this._setIronMeta('authToken', success.authenticationToken, 'globals');
             this._setIsReady(true);
+            this.fire('t-auth-api-success', success.authenticationToken);
 
             //update session value for future checks/usage
             this.$.authSession.value = success.authenticationToken;

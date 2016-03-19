@@ -1,0 +1,105 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="t-mystique-ajax-behavior.html">
+<link rel="import" href="t-mystique-auth-behavior.html">
+<link rel="import" href="t-mystique-error-message-behavior.html">
+<link rel="import" href="t-mystique-error-codes-behavior.html">
+
+
+<!--
+Generic mystique API component to heavy lift API ajax call with below features
+
+-   Auth token availability check and generate one if is not available
+-   Trigger API ajax call upon UI component event
+-   API error codes handling 
+-   Support for API request/response transalation 
+-   API success/failure events
+
+It depends on below iron meta keys of type 'globals' for processing
+
+-   `Eva.authToken` (optional, generates one if not found)
+-   `Eva.contextName` (required)
+-   `Eva.contextId` (required)
+-   `Eva.baseApiUrl` (required)
+-   `Eva.sessionApiUrlFormat` (required if server side session is supported)
+
+<b>Example</b>    
+    
+    <t-mystique-api id="baseAPI" loading={{loading}} event-name="{{UI Event Name}}" translator-type="{{Translator Namespace}}"></t-mystique-api>
+    <iron-meta key="Eva.contextName" value="testcontext" type="globals"></iron-meta>
+    <iron-meta key="Eva.authToken" value="testtoken" type="globals"></iron-meta>
+    <iron-meta key="Eva.apiBaseUrl" value="somedomain.com" type="globals"></iron-meta>
+    <iron-meta key="Eva.sessionApiUrlFormat" value="somedomain.com/SESSIONKEY" type="globals"></iron-meta>    
+-->
+<dom-module id="t-mystique-api">
+    <template>              
+    </template>
+</dom-module>
+<script>
+
+Polymer({    
+    is: "t-mystique-api",
+
+    behaviors: [Eva.MystiqueAuthBehavior, 
+                Eva.MystiqueAjaxBehavior, 
+                Eva.MystiqueErrorMessageBehavior],
+
+    properties: {        
+        /**
+         * Name of translator available at global namespace to translate UI request and API
+         * response         
+         **/
+        translatorType: {
+            type: String,
+            value: '',
+            observer: '_onTranslatorTypeChange'
+        },
+
+        /**
+         * Translator instance built from given 'translatorType'
+         */
+        _translator: {
+            type: Object,
+            value: null
+        }
+
+    },
+
+    /**
+     * Observer for 'translatorType' and loads proper instance as per given type
+     */
+    _onTranslatorTypeChange: function() {
+        if (!this.translatorType)
+            return;
+
+        try {
+            var tempEval = new Function('return window.' + this.translatorType);
+            this._translator = tempEval();
+        } catch (e) {
+            this._translator = null;
+        }
+    },
+
+    /**
+     * Translates UI request to API request if translator is provided
+     * Method from `Eva.MystiqueAjaxBehavior`
+     */
+    _buildRequest: function(request){
+        if (this._translator) {
+            request = this._translator._buildRequest(request);
+        }
+        return request;
+    },
+
+    /**
+     * Translates API response to UI response if translator is provided
+     * Method from `Eva.MystiqueAjaxBehavior`
+     */
+    _buildResponse: function(response){
+        if (this._translator) {
+            response = this._translator.buildResponse(response);
+        }
+        return response;
+    },
+
+});
+</script>

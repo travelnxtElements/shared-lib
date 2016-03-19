@@ -1,0 +1,221 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../iron-meta/iron-meta.html">
+<link rel="import" href="../t-sessionstorage/t-sessionstorage.html">
+
+<script>
+Eva = window.Eva || {};
+
+/*
+Low level behavior to load auth token from session if present or generate new one by using below meta keys. It does check `Eva.authToken` presence in session or iron meta before generating a new one. It internally handles duplicate authenticate calls etc if its part of different components on a page. It depends on below iron meta keys of type `globals` while loading/generating token.
+
+-   `Eva.authToken` (optional, generates one if not found)
+-   `Eva.contextName` (required)
+-   `Eva.contextId` (required)
+-   `Eva.baseApiUrl` (required)
+-   `Eva.sessionApiUrlFormat` (required if server side session is supported)
+
+
+@polymerBehavior 
+*/
+
+Eva.MystiqueAuthBehavior = {
+    
+    /**
+     * Fired when authentication completes with no errors.
+     * @event 't-auth-api-success'
+     * @param {{authToken}} String
+     */
+
+
+    /**
+     * Fired when authentication fails with errors.
+     * @event 't-auth-api-error'
+     * @param {{code: Object, message: String}} object
+     */
+
+    properties: {
+        /**
+         * Key values to be set in authentication api url query string
+         */
+        queryParams: Array,      
+        /**
+         * If true, indicates it has got auth token
+         */
+        isReady: {
+          type: Boolean,
+          value: false,
+          readOnly: true
+        },
+        /**
+         * Read only auth token
+         */
+        authToken: {
+            type: String,
+            readOnly: true,
+            notify: true
+        },        
+        /**
+         * Reference of t-sessionstorage used to load auth token
+         */
+        _authSessionComp: {
+            type:Object,
+            value: null
+        },
+
+    },
+
+    attached: function() {
+        this._loadAuthToken();
+    },
+
+    /**
+     * Accepts api response and return an error object {code: Number, message: String}
+     * Can be overriden by t-mystique-error-codes-behavior
+     */
+    _getErrorMessage: function(response) {
+        if (!response || !response.status){
+            console.error('No api response or response status found!');
+            return {code: 500, message: 'Operation error occured, please try again.'}
+        }
+
+        return {
+            code: response.status.code,
+            message: response.status.message
+        };
+    },
+
+    _loadAuthToken: function(){
+        this._authSessionComp =  document.createElement('t-sessionstorage');
+        this._authSessionComp.key = 'Eva.authToken';
+        this._authSessionComp.apiUrlFormat= this._getIronMeta('globals').byKey('Eva.sessionApiUrlFormat');
+        this._authSessionComp.addEventListener('t-sessionstorage-load-success', this._onSessionTokenLoad.bind(this));
+        this._authSessionComp.addEventListener('t-sessionstorage-load-error', this._onSessionTokenLoad.bind(this));
+        this._authSessionComp.load();
+    },
+
+    /**
+     * Session storage load event handler, it tries to generate token if is not available in session already. If value is present then it loads in iron-meta and also fires `t-auth-api-success` event.
+     */
+    _onSessionTokenLoad: function() {
+        if (!this._authSessionComp.value) {
+            this._generateAuthToken();
+        }else{
+            this._setIronMeta('Eva.authToken', this._authSessionComp.value, 'globals');
+            this._setAuthToken(this._authSessionComp.value);
+            this._setIsReady(true);
+            this.fire('t-auth-api-success', this._authSessionComp.value);
+        }
+    },
+
+    /**
+     * Builds iron-ajax dynamically and trigger authentication API for auth token
+     */
+    _generateAuthToken: function() {
+        var authAjax = this._getIronMeta('globals').byKey('Eva.authAjax');
+        //check for multiple base api instances
+        if (!authAjax) {
+            var request = {
+                "Name": this._getIronMeta('globals').byKey('Eva.contextName'),
+                "CID": this._getIronMeta('globals').byKey('Eva.contextId')
+            };
+            authAjax = document.createElement('iron-ajax');
+            authAjax.body = JSON.stringify(request);
+            authAjax.method = 'POST';
+            authAjax.url = this._getAuthAPIUrl(this._getIronMeta('globals').byKey('Eva.apiBaseUrl'));
+            authAjax.verbose = true;
+            authAjax.contentType = 'application/json';
+            authAjax.addEventListener('response', this._authSuccess.bind(this));
+            authAjax.addEventListener('error', this._authError.bind(this));
+            authAjax.generateRequest();
+            //persist for future reference
+            this._setIronMeta('Eva.authAjax', authAjax, 'globals');
+            this._setLoading(true);
+        }
+        else if(authAjax.loading || (!authAjax.lastError && !authAjax.lastResponse)){ //check for call from another instance not completed to attach event handlers
+            document.querySelector('body').addEventListener('t-auth-api-success', function(e){ 
+                if(e.detail){
+                    this.authToken = e.detail;
+                    this._setIsReady(true); 
+                }
+            }.bind(this));
+        }
+        else{
+            this._setIsReady(true);
+        }
+    },
+
+    _getIronMeta: function(type) {
+        return new Polymer.IronMeta({
+                type: type
+            });
+    },
+
+    _setIronMeta: function(key, value, type) {
+        new Polymer.IronMeta({
+            type: type,
+            key: key,
+            value: value
+        })
+    },
+
+    /**
+     * Auth ajax success handler
+     */
+    _authSuccess: function(event) {
+        if (!event.detail.response || !event.detail.response.status) {
+            error = {
+                message: 'Operation error occured, please try again.',
+                code: 500
+            };
+            this.fire('t-auth-api-error', error);
+            console.error('t-auth-api-error', error);
+        } else if (!event.detail.response.status.isSuccessful) {
+            error = this._getErrorMessage(event.detail.response);
+            this.fire('t-auth-api-error', error);
+            console.error('t-auth-api-error', error);
+        } else {
+            success = event.detail.response;
+            this._setAuthToken(success.authenticationToken);
+            this._setIronMeta('Eva.authToken', success.authenticationToken, 'globals');
+            this._setIsReady(true);
+            this.fire('t-auth-api-success', success.authenticationToken);
+
+            //update session value for future checks/usage
+            this._authSessionComp.value = success.authenticationToken;
+            this._authSessionComp.save();  ///here ignoring save callbacks hoping all good :)
+        }
+
+        this._setLoading(false);
+    },
+
+    /**
+     * Auth ajax error handler
+     */
+    _authError: function(event) {
+        var error = {
+            message: 'Connection error occured, please try again.',
+            code: event.detail.request.status
+        };
+
+        this._setLoading(false);
+
+        this.fire('t-auth-api-error', error);
+        console.error('t-auth-api-error', error);
+    },    
+
+
+    /**
+     * Constructs authentication API url based on given 'apiBaseUrl'
+     */
+    _getAuthAPIUrl: function(apiBaseUrl) {
+        if (apiBaseUrl) {
+            if (apiBaseUrl.lastIndexOf('/') != apiBaseUrl.length - 1)
+                apiBaseUrl += '/';
+            apiBaseUrl += 'Authentication/authenticate/context';
+            return apiBaseUrl;
+        }
+    },
+
+};
+</script>

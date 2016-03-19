@@ -1,0 +1,63 @@
+<script>
+Eva = window.Eva || {};
+/*
+Behavior to load API error codes from `Eva.MystiqueErrorCodesBehavior` to any api component and to give proper error message as per api response status code. It depends on `Eva.MystiqueErrorCodesBehavior` global namespace for the same, so ensure that namespace is present and populated with list of possible error codes and messages.
+
+@polymerBehavior 
+*/
+Eva.MystiqueErrorMessageBehavior = {
+
+    properties: {    
+        /**
+         * Error codes from `Eva.MystiqueErrorCodesBehavior`
+         * Reference of global `Eva.MystiqueErrorCodesBehavior` namespace
+         * 
+         */
+        errorCodes: {
+            type: Object,
+            value: null,
+            readOnly: true
+        }
+    },
+
+    attached: function() {
+        this._loadErrorCodes();
+    },
+
+    /**
+     * Checks and accepts global `Eva.MystiqueErrorCodesBehavior` namespace if any 
+     * on `attached` event 
+     */
+    _loadErrorCodes: function() {
+        if (window.Eva && window.Eva.MystiqueErrorCodesBehavior) {
+            this._setErrorCodes(window.Eva.MystiqueErrorCodesBehavior);
+        }
+    },
+
+    /**
+     * This method returns current api response.
+     * The response message will be set using errorCode property & error code sent in api response.
+     * If error code is not found in the property, api message will be sent.
+     * Failure message will be logged in case of no response.
+     */
+    _getErrorMessage: function(response) {
+
+        if (!response || !response.status){
+            console.error('No api response or response status found!');
+            return {code: 500, message: 'Operation error occured, please try again.'}
+        }
+
+        if (!this.errorCodes)
+            return {
+                code: response.status.code,
+                message: response.status.message
+            };
+
+        return {
+            code: response.status.code,
+            message: this.errorCodes[response.status.code] || response.status.message
+        };
+    },   
+
+};
+</script>

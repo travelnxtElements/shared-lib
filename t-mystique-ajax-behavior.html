@@ -1,0 +1,312 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../iron-meta/iron-meta.html">
+<link rel="import" href="../t-sessionstorage/t-sessionstorage.html">
+
+<script>
+Eva = window.Eva || {};
+
+/*
+Low level behavior to heavy lift API ajax call with below features. 
+
+-   Subscribe to UI event using `eventName` and trigger API ajax call upon that event.
+-   Hooks to translate UI request and API response.
+-   Fires API success/failure events.
+
+It depends on below iron meta keys of type `globals` while making api call.
+
+-   `Eva.authToken` (optional, generates one if not found)
+-   `Eva.apiBaseUrl` (required)
+
+It does wait for `t-auth-api-success` event if auth token is not present by the time
+api call is requested. So ensure `Eva.authToken` is present or `Eva.MystiqueAuthBehavior`
+is included in component.
+
+@polymerBehavior 
+*/
+
+Eva.MystiqueAjaxBehavior = {
+
+    /**
+     * Fired when API call completes with no errors.
+     * @event eventName + '-api-success'
+     * @param {{status: Object, result: Object}} object api response object
+     */
+
+    /**
+     * Fired when API call throws error (both server or network error).
+     * @event eventName + '-api-error'
+     * @param {{code: Number, message: String}} object
+     */
+
+    properties: {
+        /**
+         * API relative url. Ex /api/hotel/search
+         */
+        apiRelativeUrl: String,
+        /**
+         * Key values to be set in api url query string
+         */
+        queryParams: Array,  
+        /**
+         * API in progress stage
+         */
+        loading: {
+            type: Boolean,
+            notify: true,
+            readOnly: true
+        },
+        /**
+         * Name of the event to subscribe to and trigger API call
+         **/
+        eventName: {
+            type: String,
+            value: 't-api'
+        },        
+        /**
+         * Most recent request's API success response
+         */
+        lastResponse: {
+            type: Object,
+            notify: true,
+            readOnly: true
+        },
+        /**
+         * Most recent request's API error or network error
+         * Translate all network errors to below given format
+         * Sample error object
+        {
+            "code": Number,
+            "message": String,
+            "additionalMessages": [
+              {
+                "description": String,
+                "code": Number,
+                "message": String
+              }
+            ]
+        }
+         */
+        lastError: {
+            type: Object,
+            notify: true,
+            readOnly: true
+        },
+
+        /**
+         * API ajax call method Ex. GET, POST, PUT, DELETE
+         */
+        method: {
+            type: String,
+            value: 'GET'
+        },
+        
+        /**
+         * Translated API request
+         */
+        _requestPayload: {
+            type: Object,
+            notify: true
+        },
+
+         /**
+         * Reference of iron-ajax used to make api call
+         */
+        _apiAjaxComp: {
+            type:Object,
+            value: null
+        },       
+    },
+
+    attached: function() {
+        this._registerToUIEvent();
+    },
+
+    /**
+     * Auto subscribes to given UI event using 'eventName'
+     */
+    _registerToUIEvent: function() {
+        if(this.eventName){
+          document.querySelector('body').addEventListener(this.eventName, this._onUIEvent.bind(this));
+        }
+    },
+
+    /**
+     * Handler for given event type, when ever an event of type 'eventName' fires it checks 
+     * and waits for auth token and once it is avaialable, it will proceed by translating 
+     * UI model to API model if any translator is supplied.
+     */
+    _onUIEvent: function(e) {
+        var authToken = this._getIronMeta('globals').byKey('Eva.authToken');
+        if(!this.authToken){
+            document.querySelector('body').addEventListener('t-auth-api-success', this._onUIEvent.bind(this));
+            return;
+        }
+
+        this.generateRequest(e.detail);
+    },
+
+    /**
+     * Validates api meta and triggers api ajax call
+     */
+    generateRequest: function(data){
+        if (data) {
+            this._requestPayload = this._buildRequest(data);
+        }
+
+        if (this._validateApiMeta()) {
+            this._apiAjaxComp = document.createElement('iron-ajax');
+            this._apiAjaxComp.method= this.method ;
+            this._apiAjaxComp.contentType = "application/json" ;
+            this._apiAjaxComp.handleAs = "json" ;
+            this._apiAjaxComp.verbose = true;
+            this._apiAjaxComp.url = this._getUrl();
+            this._apiAjaxComp.body = JSON.stringify(this._requestPayload);
+            this._apiAjaxComp.addEventListener('response', this._successHandler.bind(this));
+            this._apiAjaxComp.addEventListener('error', this._errorHandler.bind(this));
+            this._setLoading(true);
+            this._apiAjaxComp.generateRequest();
+        }
+    },
+
+    /**
+     * Placeholder method to build api request
+     * Override in api component to translate model to API version
+     */
+    _buildRequest: function(request){
+        return request;
+    },
+
+    /**
+     * Placeholder method to build UI response
+     * Override in api component to translate odel to UI version
+     */
+    _buildResponse: function(response){
+        return response;
+    },
+
+    /**
+     * Builds final API url using given base and relative urls + tokens / query strings given if any
+     */
+    _getUrl: function() {
+        //sanitize urls before use
+        var apiBaseUrl = this._getIronMeta('globals').byKey('Eva.apiBaseUrl');
+        if (!apiBaseUrl && apiBaseUrl.lastIndexOf('/') == apiBaseUrl.length - 1) {
+            this.set('apiBaseUrl', apiBaseUrl.substring(0, apiBaseUrl.length - 1));
+        }
+        if (!this.apiRelativeUrl && this.apiRelativeUrl.firstIndexOf('/') != 0) {
+            this.set('apiRelativeUrl', '/' + this.apiRelativeUrl);
+        }
+        return apiBaseUrl + this.apiRelativeUrl + '?token=' + this._getIronMeta('globals').byKey('Eva.authToken');
+    },
+
+    /**
+     * Checks for api mandatory fields presence
+     */
+    _validateApiMeta: function() {
+        var apiBaseUrl = this._getIronMeta('globals').byKey('Eva.apiBaseUrl');
+        if (!apiBaseUrl) {
+            console.log('apiBaseUrl can\'t be empty');
+            return false;
+        } else if (!this.apiRelativeUrl) {
+            console.log('apiRelativeUrl can\'t be empty');
+            return false;
+        } else if (!this._getIronMeta('globals').byKey('Eva.authToken')) {
+            console.log('authToken can\'t be empty');
+            return false;
+        }
+        return true;
+    },
+
+    /**
+     * This method handles the success callback event handling.
+     * It fires the success and faulure events with customized error messages
+     * Success and failure event names follow following conventions -
+     * 1. success event name  = [component name] + '-api-success'
+     * 2. failure event name  = [component name] + '-api-error'
+     * Expects ajax sussess event as a parameter & throws error if component name not found.
+     */
+    _successHandler: function(event) {
+
+        var error = null;
+        var success = null;
+
+        if (!event.detail.response || !event.detail.response.status || event.detail.response.status.code == 500) {
+
+            error = {
+                message: 'Operation error occured, please try again.',
+                code: 500
+            };
+            this.fire(this.eventName + '-api-error', error);
+            console.error(this.eventName + '-api-error', error);
+
+        } else if (!event.detail.response.status.isSuccessful) {
+
+            error = this._getErrorMessage(event.detail.response);
+            this.fire(this.eventName + '-api-error', error);
+            console.error(this.eventName + '-api-error', error);
+
+        } else {
+            success = event.detail.response;
+            if (success) {
+                success = this._buildResponse(success);
+            }
+            this.fire(this.eventName + '-api-success', success);
+        }
+
+        if (error)
+            this._setLastError(error);
+        else if (success)
+            this._setLastResponse(success);
+
+        this._setLoading(false);
+    },
+
+    /**
+     * This method handles the error callback event handling.
+     * It fires the faulure event with customized error message & logs the error
+     * Failure event name follows following convention -
+     * 1. failure event name  = [component name] + '-api-error'
+     * Expects ajax error event as a parameter & throws error if component name not found.
+     */
+    _errorHandler: function(event) {
+        var error = {
+            message: 'Connection error occured, please try again.',
+            code: event.detail.request.status
+        };
+
+        this._setLastError(error);
+        this._setLoading(false);
+
+        this.fire(this.eventName + '-api-error', error);
+        console.error(this.eventName + '-api-error', error);
+
+    },
+
+    /**
+     * Accepts api response and return an error object {code: Number, message: String}
+     * Can be overriden by t-mystique-error-codes-behavior
+     */
+    _getErrorMessage: function(response) {
+
+        if (!response || !response.status){
+            console.error('No api response or response status found!');
+            return {code: 500, message: 'Operation error occured, please try again.'}
+        }
+
+        return {
+            code: response.status.code,
+            message: response.status.message
+        };
+    },
+
+    _getIronMeta: function(type) {
+        return new Polymer.IronMeta({
+                type: type
+            });
+    },
+
+    
+
+};
+</script>

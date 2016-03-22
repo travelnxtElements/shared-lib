@@ -7,7 +7,7 @@
 Eva = window.Eva || {};
 
 /*
-Low level behavior to load auth token from session if present or generate new one by using below meta keys. It does check `Eva.authToken` presence in session or iron meta before generating a new one. It internally handles duplicate authenticate calls etc if its part of different components on a page. It depends on below iron meta keys of type `globals` while loading/generating token.
+Low level behavior to load Mystique API auth token from session if present or generate new one by using below meta keys. It does check `Eva.authToken` presence in session or iron meta before generating a new one. It internally handles duplicate authenticate calls etc if its part of different components on a page. It depends on below iron meta keys of type `globals` while loading/generating token.
 
 -   `Eva.authToken` (optional, generates one if not found)
 -   `Eva.contextName` (required)
@@ -19,7 +19,7 @@ Low level behavior to load auth token from session if present or generate new on
 @polymerBehavior 
 */
 
-Eva.MystiqueAuthBehavior = {
+Eva.ApiAuthBehavior = {
     
     /**
      * Fired when authentication completes with no errors.

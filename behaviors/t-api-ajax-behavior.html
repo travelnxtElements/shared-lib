@@ -7,7 +7,7 @@
 Eva = window.Eva || {};
 
 /*
-Low level behavior to heavy lift API ajax call with below features. 
+Low level behavior to heavy lift Mystique API ajax call with below features. 
 
 -   Subscribe to UI event using `eventName` and trigger API ajax call upon that event.
 -   Hooks to translate UI request and API response.
@@ -19,13 +19,13 @@ It depends on below iron meta keys of type `globals` while making api call.
 -   `Eva.apiBaseUrl` (required)
 
 It does wait for `t-auth-api-success` event if auth token is not present by the time
-api call is requested. So ensure `Eva.authToken` is present or `Eva.MystiqueAuthBehavior`
+api call is requested. So ensure `Eva.authToken` is present or `Eva.ApiAuthBehavior`
 is included in component.
 
 @polymerBehavior 
 */
 
-Eva.MystiqueAjaxBehavior = {
+Eva.ApiAjaxBehavior = {
 
     /**
      * Fired when API call completes with no errors.

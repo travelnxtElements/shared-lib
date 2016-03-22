@@ -6,7 +6,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="viewport" content="initial-scale=1, maximum-scale=1">
     <script src="../../webcomponentsjs/webcomponents-lite.js"></script>        
-    <link rel="import" href="../t-mystique-api.html">
+    <link rel="import" href="../t-generic-api.html">
     <link rel="import" href="../../iron-meta/iron-meta.html">    
 
     <style>
@@ -21,9 +21,9 @@
         <iron-meta key="Eva.contextName" value="mystiquedemo" type="globals"></iron-meta>
         <iron-meta key="Eva.apiBaseUrl" value="http://demo.travelnxt.com/api/" type="globals"></iron-meta>
 
-        <t-mystique-api id="searchApi" loading={{loading}} method="POST" api-relative-url="flight/search" event-name="t-air-search" translator-type="Eva.AirSearchAPITranslator"></t-mystique-api>
+        <t-generic-api id="searchApi" loading={{loading}} method="POST" api-relative-url="flight/search" event-name="t-air-search" translator-type="Eva.AirSearchAPITranslator"></t-generic-api>
 
-        <t-mystique-api id="searchApi" loading={{loading}} method="POST" api-relative-url="flight/search" event-name="t-air-search" translator-type="Eva.AirSearchAPITranslator"></t-mystique-api>
+        <t-generic-api id="searchApi" loading={{loading}} method="POST" api-relative-url="flight/search" event-name="t-air-search" translator-type="Eva.AirSearchAPITranslator"></t-generic-api>
         
         <template is="dom-if" if="{{loading}}">
             <div>API in-progress, wait..</div>
@@ -36,7 +36,7 @@ window.addEventListener('WebComponentsReady', function(e) {
     var event = new Event('t-air-search');
     document.querySelector('body').dispatchEvent(event);
     
-    var apiComp = document.querySelector('t-mystique-api');
+    var apiComp = document.querySelector('t-generic-api');
     
     apiComp.addEventListener('t-auth-api-success', function(e){ alert('auth success - '+ e.detail ) });
     apiComp.addEventListener('t-auth-api-error', function(e){ alert('auth fail - '+ e.detail.message ) });

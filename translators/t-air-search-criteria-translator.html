@@ -1,0 +1,127 @@
+<script>
+Eva = window.Eva || {};
+
+/*
+Translates UI air criteria to Mystique API model and vice-versa.
+
+@polymerBehavior 
+*/
+Eva.AirSearchCriteriaTranslator = {
+    /**
+     * Translates UI criteria to API criteria object
+     */
+    toApiModel: function(data) {
+
+        var getLocation = function(airport){
+            if(typeof airport == 'object'){
+                return airport;
+            }
+            else if(typeof airport == 'string'){
+                return {
+                    type: 'Airport',
+                    code: airport
+                }
+            }
+        };
+
+        var criteria = {
+            "passengers": [{
+                "quantity": data.adultCount || 1,
+                "type": "Adult",
+                "ages": data.adultAges || []
+            }, {
+                "quantity": data.childCount || 0,
+                "type": "Child",
+                "ages": data.childAges || []
+            }, {
+                "quantity": data.seniorCount || 0,
+                "type": "Senior",
+                "ages": data.seniorAges || []
+            }, {
+                "quantity": data.infantCount || 0,
+                "type": "Infant",
+                "ages": data.infantAges || []
+            }],
+            "legs": [{
+                "departureLocation": getLocation(data.leg1Origin),
+                "includeNearByAirportsForDeparture": this._getValue(data.includeNearByAirportsForLeg1Origin, true),
+                "arrivalLocation": getLocation(data.leg1Destination),
+                "includeNearByAirportsForArrival": this._getValue(data.includeNearByAirportsForLeg1Destination, true),
+                "travelDate": {
+                    "date": data.leg1Date
+                }
+            }],
+            "productType": "Flight",
+            "preferences": {
+                "nonStopOnly": this._getValue(data.nonStopOnly, false),
+                "cabinType": data.cabinType
+            }
+        };
+
+        if (data.tripType.toLowerCase() === 'roundtrip') {
+            criteria.legs.push({
+                "departureLocation": getLocation(data.leg1Destination),
+                "includeNearByAirportsForDeparture": this._getValue(data.includeNearByAirportsForLeg1Destination, true),
+                "arrivalLocation": getLocation(data.leg1Origin),
+                "includeNearByAirportsForArrival": this._getValue(data.includeNearByAirportsForLeg1Origin, true),
+                "travelDate": {
+                    "date": data.leg2Date
+                }
+            });
+        }
+        return criteria;
+    },
+
+    /**
+     * Translates API criteria object to UI criteria 
+     */
+    toUiModel: function(data) {
+        if (!data)
+            return null;
+
+
+        if (data.passengers) {
+            function paxFilterCtr(paxType) {
+                return function(pax) {
+                    return pax.type.toLowerCase() == paxType.toLowerCase();
+                }
+            }
+            var adultPax = data.passengers.filter(paxFilterCtr('Adult'));
+            var childPax = data.passengers.filter(paxFilterCtr('Child'));
+            var seniorPax = data.passengers.filter(paxFilterCtr('Senior'));
+            var infantPax = data.passengers.filter(paxFilterCtr('Infant'));
+        } else {
+            var adultPax = childPax = seniorPax = infantPax = {}
+        }
+
+        var criteria = {
+            adultCount: adultPax.quantity || 1, //default: 1
+            childCount: childPax.quantity || 0, //default: 0
+            seniorCount: seniorPax.quantity || 0, //default: 0
+            infantCount: infantPax.quantity || 0, //default: 0
+            adultAges: adultPax.ages || [], //default: []
+            childAges: childPax.ages || [], //default: []
+            seniorAges: seniorPax.ages || [], //default: []
+            infantAges: infantPax.ages || [], //default: []
+            nonStopOnly: this._getValue(data.preferences.nonStopOnly, false), 
+            cabinType: this._getValue(data.preferences.cabinType, 'Economy'), 
+            leg1Origin: data.legs[0].departureLocation,  
+            includeNearByAirportsForLeg1Origin: this._getValue(data.legs[0].includeNearByAirportsForDeparture, true),
+            leg1Destination: data.legs[0].arrivalLocation,
+            includeNearByAirportsForLeg1Destination: this._getValue(data.legs[0].includeNearByAirportsForArrival, true), 
+            leg1Date: data.legs[0].travelDate.date, 
+            leg2Date: data.legs.length > 1 ? data.legs[1].travelDate.date : null, 
+            tripType: data.legs.length > 1 ? 'RoundTrip' : 'OneWay' 
+        };
+    },
+
+    /**
+     * checks value presence (applies null & undefined checks) and returns if present else returns default value
+     */
+    _getValue: function(val, defVal) {
+        if (val != null && val != undefined)
+            return val;
+        return defVal;
+    }
+}
+</script>

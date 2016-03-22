@@ -1,0 +1,143 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="behaviors/t-api-ajax-behavior.html">
+<link rel="import" href="behaviors/t-api-auth-behavior.html">
+<link rel="import" href="behaviors/t-api-error-message-behavior.html">
+<link rel="import" href="translators/t-air-search-criteria-translator.html">
+
+<!--
+`t-air-search-api` provides API to initiate air search for given search criteria. 
+
+Search can be initiated in two ways
+-   Through public api `search`
+-   Through event `t-air-search` on `body`tag, check below for contract
+
+API success and failure status will be updated back through below events
+-   `t-air-search-api-success`
+-   `t-air-search-api-error`
+
+It uses `Eva.AirSearchCriteriaTranslator` to translate search criteria, override 
+this for any customization. Also it depends on below iron meta keys of type 'globals' to make API call.
+
+-   `Eva.authToken` (optional, generates one if not found)
+-   `Eva.contextName` (required)
+-   `Eva.contextId` (required)
+-   `Eva.baseApiUrl` (required)
+-   `Eva.sessionApiUrlFormat` (required if server side session is supported)
+
+
+__Example__
+
+    <t-air-search-api loading={{loading}}></t-air-search-api>
+    <iron-meta key="Eva.contextName" value="testcontext" type="globals"></iron-meta>
+    <iron-meta key="Eva.authToken" value="testtoken" type="globals"></iron-meta>
+    <iron-meta key="Eva.apiBaseUrl" value="somedomain.com" type="globals"></iron-meta>
+    <iron-meta key="Eva.sessionApiUrlFormat" value="somedomain.com/SESSIONKEY" type="globals"></iron-meta>    
+
+__UI search criteria object model__
+
+    {    
+        adultCount: Number, //default: 1
+        childCount: Number, //default: 0
+        seniorCount: Number,//default: 0
+        infantCount: Number,//default: 0
+        adultAges: Array, //default: []
+        childAges:  Array,//default: []
+        seniorAges: Array,//default: []
+        infantAges: Array,//default: []
+        nonStopOnly: Boolean, //default: false
+        cabinType: String, // Economy/Business/First, //default: Economy        
+        leg1Origin: Location Object or Airport code, //default: null  //required field     
+        includeNearByAirportsForLeg1Origin: Boolean, //default: true
+        leg1Destination: Location Object or Airport code, //default: null //required field
+        includeNearByAirportsForLeg1Destination: Boolean, //default: true
+        leg1Date: String, //as per globalization format, //default: null  //required field     
+        leg2Date: String, //as per globalization format, //default: null  //required field
+        tripType: String, //RoundTrip/OneWay, //default: RoundTrip
+    }
+
+__Location object model__
+
+    {
+        type: String, //Airport/City, //default: Airport
+        geoCode: String, //{Lat,Long} //default: null
+        name: String, //default: null
+        code: String, //default: null
+    }
+
+Note: `geoCode` AND `name` are optional in case `type` is `City`
+
+
+
+@polymerBehavior 
+
+
+-->
+<script>
+Polymer({
+
+    /**
+     * Fired when search API call completes with no errors.
+     * @event t-air-search-api-success
+     * @param {{status: Object, result: Object}} object api response object, [refer here](http://demo.travelnxt.com/dev/apis/flights/search#) 
+     */
+
+    /**
+     * Fired when API call throws error (both server or network error).
+     * @event t-air-search-api-error
+     * @param {{code: Number, message: String}} object check error codes [here](http://demo.travelnxt.com/dev/statuscodes)
+     */
+
+
+    is: "t-air-search-api",
+
+    behaviors: [Eva.ApiAuthBehavior, 
+                Eva.ApiAjaxBehavior, 
+                Eva.ApiErrorMessageBehavior],
+
+    properties: {
+        /**
+         * Name of the event it subscribe to listen and initiate search. Change only 
+         * if want to use custom name to avoid conflicts etc else use default one only.
+         */
+        eventName: {
+            type: String,
+            value: 't-air-search'
+        },
+
+        /**
+         * Air search API relative url. Do not change until you want to point to custom end point
+         */
+        apiRelativeUrl: {
+            type: String,
+            value: 'flight/search'
+        },
+
+        /**
+         * API call type
+         */
+        method:{
+            type: String,
+            value: 'POST'
+        }
+    },
+
+    /**
+     * Makes search api call and return `searchId` in response to fetch results
+     * @param  {Object} uiCriteria check above UI criteria model for ref   
+     */
+    search: function(uiCriteria) {
+        this.initiateRequest(uiCriteria);                
+    },
+
+    /**
+     * 
+     */
+    _buildRequest: function(uiModel){
+        return Eva.AirSearchCriteriaTranslator.toApiModel(uiModel);
+    },
+
+    _buildResponse: function(apiModel){
+        return apiModel;  
+    }
+});
+</script>

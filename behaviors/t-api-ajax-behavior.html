@@ -128,6 +128,9 @@ Eva.ApiAjaxBehavior = {
      * Auto subscribes to given UI event using 'eventName'
      */
     _registerToUIEvent: function(newValue, oldValue) {
+        if(!this.isAttached)
+            return;
+        
         //first remove any event handlers registered already
         if(oldValue){
             document.querySelector('body').removeEventListener(oldValue, this._onUIEvent.bind(this));

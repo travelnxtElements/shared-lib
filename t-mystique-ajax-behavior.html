@@ -57,11 +57,13 @@ Eva.MystiqueAjaxBehavior = {
             readOnly: true
         },
         /**
-         * Name of the event to subscribe to and trigger API call
+         * Name of the event to subscribe to and trigger API call. Observes event name changes 
+         * and updated event bindings automatically.
          **/
         eventName: {
             type: String,
-            value: 't-api'
+            value: 't-api',
+            observer: '_registerToUIEvent'
         },        
         /**
          * Most recent request's API success response
@@ -125,7 +127,13 @@ Eva.MystiqueAjaxBehavior = {
     /**
      * Auto subscribes to given UI event using 'eventName'
      */
-    _registerToUIEvent: function() {
+    _registerToUIEvent: function(newValue, oldValue) {
+        //first remove any event handlers registered already
+        if(oldValue){
+            document.querySelector('body').removeEventListener(oldValue, this._onUIEvent.bind(this));
+        }
+
+        //add handler for new one
         if(this.eventName){
           document.querySelector('body').addEventListener(this.eventName, this._onUIEvent.bind(this));
         }
@@ -143,13 +151,13 @@ Eva.MystiqueAjaxBehavior = {
             return;
         }
 
-        this.generateRequest(e.detail);
+        this.initiateRequest(e && e.detail ? e.detail : null);
     },
 
     /**
      * Validates api meta and triggers api ajax call
      */
-    generateRequest: function(data){
+    initiateRequest: function(data){
         if (data) {
             this._requestPayload = this._buildRequest(data);
         }

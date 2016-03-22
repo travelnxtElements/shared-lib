@@ -1,7 +1,8 @@
+<link rel="import" href="t-mystique-api-error-codes.html">
 <script>
 Eva = window.Eva || {};
 /*
-Behavior to load API error codes from `Eva.MystiqueErrorCodesBehavior` to any api component and to give proper error message as per api response status code. It depends on `Eva.MystiqueErrorCodesBehavior` global namespace for the same, so ensure that namespace is present and populated with list of possible error codes and messages.
+Behavior to load API error codes from `Eva.MystiqueErrorCodes` to any api component and to give proper error message as per api response status code. It depends on `Eva.MystiqueErrorCodes` global namespace for the same, so ensure that namespace is present and populated with list of possible error codes and messages.
 
 @polymerBehavior 
 */
@@ -9,9 +10,7 @@ Eva.MystiqueErrorMessageBehavior = {
 
     properties: {    
         /**
-         * Error codes from `Eva.MystiqueErrorCodesBehavior`
-         * Reference of global `Eva.MystiqueErrorCodesBehavior` namespace
-         * 
+         * Error codes from `Eva.MystiqueErrorCodes` namespace
          */
         errorCodes: {
             type: Object,
@@ -25,12 +24,12 @@ Eva.MystiqueErrorMessageBehavior = {
     },
 
     /**
-     * Checks and accepts global `Eva.MystiqueErrorCodesBehavior` namespace if any 
+     * Checks and accepts global `Eva.MystiqueErrorCodes` namespace if any 
      * on `attached` event 
      */
     _loadErrorCodes: function() {
-        if (window.Eva && window.Eva.MystiqueErrorCodesBehavior) {
-            this._setErrorCodes(window.Eva.MystiqueErrorCodesBehavior);
+        if (window.Eva && window.Eva.MystiqueErrorCodes) {
+            this._setErrorCodes(window.Eva.MystiqueErrorCodes);
         }
     },
 

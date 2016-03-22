@@ -2,13 +2,14 @@
 Eva = window.Eva || {};
 
 /*
-Mystique API error codes
+Mystique API error codes. Override `Eva.MystiqueErrorCodes` global namespace for any
+error code customization.
 
 
 @polymerBehavior 
 */
 
-Eva.MystiqueErrorCodesBehavior = {     
+Eva.MystiqueErrorCodes = {     
     //Operation error occured, please try again.
     "316000": "Operation error occured, please try again.",
     //Email not registered for the user.

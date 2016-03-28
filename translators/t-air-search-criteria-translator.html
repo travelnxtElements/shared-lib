@@ -58,7 +58,7 @@ Eva.AirSearchCriteriaTranslator = {
             }
         };
 
-        if (data.tripType.toLowerCase() === 'roundtrip') {
+        if (!data.tripType || data.tripType.toLowerCase() === 'roundtrip') {
             criteria.legs.push({
                 "departureLocation": getLocation(data.leg1Destination),
                 "includeNearByAirportsForDeparture": this._getValue(data.includeNearByAirportsForLeg1Destination, true),

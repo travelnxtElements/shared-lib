@@ -8,8 +8,8 @@
 `t-air-search-api` provides API to initiate air search for given search criteria. 
 
 Search can be initiated in two ways
--   Through public api `search`
--   Through event `t-air-search` on `body`tag, check below for contract
+-   Using public api `search`
+-   Firing an event `t-air-search` on `body`tag, check below for contract
 
 API success and failure status will be updated back through below events
 -   `t-air-search-api-success`
@@ -67,10 +67,6 @@ __Location object model__
 Note: `geoCode` AND `name` are optional in case `type` is `City`
 
 
-
-@polymerBehavior 
-
-
 -->
 <script>
 Polymer({
@@ -101,7 +97,8 @@ Polymer({
          */
         eventName: {
             type: String,
-            value: 't-air-search'
+            value: 't-air-search',
+            readOnly: true
         },
 
         /**
@@ -109,7 +106,8 @@ Polymer({
          */
         apiRelativeUrl: {
             type: String,
-            value: 'flight/search'
+            value: 'flight/search',
+            readOnly: true
         },
 
         /**
@@ -117,7 +115,8 @@ Polymer({
          */
         method:{
             type: String,
-            value: 'POST'
+            value: 'POST',
+            readOnly: true
         }
     },
 
@@ -133,7 +132,10 @@ Polymer({
      * 
      */
     _buildRequest: function(uiModel){
-        return Eva.AirSearchCriteriaTranslator.toApiModel(uiModel);
+        if(uiModel)
+            return Eva.AirSearchCriteriaTranslator.toApiModel(uiModel);
+        else
+            return uiModel;
     },
 
     _buildResponse: function(apiModel){

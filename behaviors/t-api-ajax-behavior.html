@@ -160,10 +160,8 @@ Eva.ApiAjaxBehavior = {
     /**
      * Validates api meta and triggers api ajax call
      */
-    initiateRequest: function(data){
-        if (data) {
-            this._requestPayload = this._buildRequest(data);
-        }
+    initiateRequest: function(data){        
+        this._requestPayload = this._buildRequest(data);
 
         if (this._validateApiMeta()) {
             this._apiAjaxComp = document.createElement('iron-ajax');
@@ -182,7 +180,7 @@ Eva.ApiAjaxBehavior = {
 
     /**
      * Placeholder method to build api request
-     * Override in api component to translate model to API version
+     * Override in api component to translate model to API version or to update ajax params etc
      */
     _buildRequest: function(request){
         return request;
@@ -202,13 +200,21 @@ Eva.ApiAjaxBehavior = {
     _getUrl: function() {
         //sanitize urls before use
         var apiBaseUrl = this._getIronMeta('globals').byKey('Eva.apiBaseUrl');
+        var apiRelativeUrl = this.apiRelativeUrl;
         if (!apiBaseUrl && apiBaseUrl.lastIndexOf('/') == apiBaseUrl.length - 1) {
             this.set('apiBaseUrl', apiBaseUrl.substring(0, apiBaseUrl.length - 1));
         }
-        if (!this.apiRelativeUrl && this.apiRelativeUrl.firstIndexOf('/') != 0) {
-            this.set('apiRelativeUrl', '/' + this.apiRelativeUrl);
+        if (!apiRelativeUrl && apiRelativeUrl.firstIndexOf('/') != 0) {
+            this.set('apiRelativeUrl', '/' + apiRelativeUrl.apiRelativeUrl);
         }
-        return apiBaseUrl + this.apiRelativeUrl + '?token=' + this._getIronMeta('globals').byKey('Eva.authToken');
+
+        if((apiBaseUrl + apiRelativeUrl).indexOf('?') == -1){
+            return apiBaseUrl + apiRelativeUrl + '?token=' + this._getIronMeta('globals').byKey('Eva.authToken');
+        }
+        else{
+             return apiBaseUrl + apiRelativeUrl + '&token=' + this._getIronMeta('globals').byKey('Eva.authToken');
+        }
+
     },
 
     /**

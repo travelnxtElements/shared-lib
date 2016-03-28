@@ -1,0 +1,321 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="behaviors/t-api-ajax-behavior.html">
+<link rel="import" href="behaviors/t-api-auth-behavior.html">
+<link rel="import" href="behaviors/t-api-error-message-behavior.html">
+<link rel="import" href="translators/t-air-search-criteria-translator.html">
+<!--
+`t-air-results-api` provides API to get air itineraries for given search id or search criteria
+by applying filter/sort information if provided any.
+
+Results can be fetched in two ways
+-   Using public api `getResults`
+-   Firing event `t-air-results` or `t-air-results-next-page` or `t-air-results-prev-page` on `body`tag, check below for contract
+
+API success and failure status will be updated back through below events
+-   `t-air-results-api-success`
+-   `t-air-results-api-error`
+
+It depends on below iron meta keys of type 'globals' to make API call.
+
+-   `Eva.authToken` (optional, generates one if not found)
+-   `Eva.contextName` (required)
+-   `Eva.contextId` (required)
+-   `Eva.baseApiUrl` (required)
+-   `Eva.sessionApiUrlFormat` (required if server side session is supported)
+
+
+__Example__
+
+    <t-air-results-api loading={{loading}}></t-air-results-api>
+    <iron-meta key="Eva.contextName" value="testcontext" type="globals"></iron-meta>
+    <iron-meta key="Eva.authToken" value="testtoken" type="globals"></iron-meta>
+    <iron-meta key="Eva.apiBaseUrl" value="somedomain.com" type="globals"></iron-meta>
+    <iron-meta key="Eva.sessionApiUrlFormat" value="somedomain.com/SESSIONKEY" type="globals"></iron-meta>    
+
+__UI request object to get results__
+
+		{
+			searchId: String,
+			criteria: Object,	//check below criteria object model
+			pagingInfo: {			//optional
+				pageNumber: Number, //default: 1
+				pageSize: Number    //default: 20
+			}
+			sortingInfo: {			//optional
+				sortType: String, //Price/Stops/Duration //Default:Price
+				sortOrder: String, //Asc/Desc //Default:Asc
+			},
+			filters: 			//optional 
+				[   
+					{
+						group: String, 
+						category: String,
+						name: String, //for `range` type possible values are `min` and `max` and for `options` type it should be `name` of the option returned in filter api response
+						value: String //applicable only for `range` type, should be a applied `min` or `min` value
+
+					}				
+				] 	
+		}
+
+__Note__: 
+-	For getting initial results, either of search id and criteria is mandatory but while applying page/sort/filter info search id is mandatory.
+-	Refer [filter api](http://demo.travelnxt.com/dev/apis/flights/filter#) respose for possible groups/categories/types
+
+
+__UI search criteria object model__
+
+    {    
+        adultCount: Number, //default: 1
+        childCount: Number, //default: 0
+        seniorCount: Number,//default: 0
+        infantCount: Number,//default: 0
+        adultAges: Array, //default: []
+        childAges:  Array,//default: []
+        seniorAges: Array,//default: []
+        infantAges: Array,//default: []
+        nonStopOnly: Boolean, //default: false
+        cabinType: String, // Economy/Business/First, //default: Economy        
+        leg1Origin: Location Object or Airport code, //default: null  //required field     
+        includeNearByAirportsForLeg1Origin: Boolean, //default: true
+        leg1Destination: Location Object or Airport code, //default: null //required field
+        includeNearByAirportsForLeg1Destination: Boolean, //default: true
+        leg1Date: String, //as per globalization format, //default: null  //required field     
+        leg2Date: String, //as per globalization format, //default: null  //required field
+        tripType: String, //RoundTrip/OneWay, //default: RoundTrip
+    }
+
+__Location object model__
+
+    {
+        type: String, //Airport/City, //default: Airport
+        geoCode: String, //{Lat,Long} //default: null
+        name: String, //default: null
+        code: String, //default: null
+    }
+
+Note: `geoCode` AND `name` are optional in case `type` is `City`
+
+
+-->
+<script>
+Polymer({
+
+    /**
+     * Fired when search API call completes with no errors.
+     * @event t-air-results-api-success
+     * @param {{status: Object, result: Object}} object api response object, [refer here](http://demo.travelnxt.com/dev/apis/flights/listing) 
+     */
+
+    /**
+     * Fired when API call throws error (both server or network error).
+     * @event t-air-results-api-error
+     * @param {{code: Number, message: String}} object check error codes [here](http://demo.travelnxt.com/dev/statuscodes)
+     */
+
+
+    is: "t-air-results-api",
+
+    behaviors: [Eva.ApiAuthBehavior,
+        Eva.ApiAjaxBehavior,
+        Eva.ApiErrorMessageBehavior
+    ],
+
+    properties: {
+        /**
+         * Name of the event it subscribe to listen and initiate search. Change only 
+         * if want to use custom name to avoid conflicts etc else use default one only.
+         */
+        eventName: {
+            type: String,
+            value: 't-air-results',
+            readOnly: true
+        },
+
+        /**
+         * Air search API relative url. Do not change until you want to point to custom end point
+         */
+        apiRelativeUrl: {
+            type: String,
+            value: 'flight/results',
+            readOnly: true
+        },
+
+        /**
+         * API call type
+         */
+        method: {
+            type: String,
+            value: 'GET',
+            readOnly: true
+        },
+
+        currentPage: {
+            type: Number,
+            value: 1,
+            readOnly: true,
+            notify: true
+        },
+
+        hasNextPage: {
+            type: Boolean,
+            value: false,
+            readOnly: true,
+            notify: true
+        },
+
+        hasPrevPage: {
+            type: Boolean,
+            value: false,
+            readOnly: true,
+            notify: true
+        },
+		
+		/**
+		 * Current request backup data
+		 */
+        _sortingInfo: {
+        	type: Object,
+        	value: {
+        		sortType: 'Price',
+        		sortOrder: 'Asc'
+        	}
+        },
+		
+		/**
+		 * Current request backup data
+		 */
+        _filterInfo: {
+        	type: Object,
+        	value: null
+        },
+		
+		/**
+		 * Current request backup data
+		 */
+        _pagingInfo: {
+        	type: Object,
+        	value: {
+        		pageNumber: 1,
+        		pageSize: 20
+        	}
+        },
+
+    },
+
+    _resultsUrl: 'flight/results',
+
+    _filterUrl: 'flight/results/filter',
+
+    attached: function() {
+        document.querySelector('body').addEventListener(this.eventName + '-next-page', this.getNextPage.bind(this));;
+        document.querySelector('body').addEventListener(this.eventName + '-prev-page', this.getPrevPage.bind(this));;
+    },
+
+    /**
+     * Gets air results for given criteria object or searchId string
+     * @param  {Object} uiCriteria check above UI criteria model for ref   
+     * @param  {String} searchId got through `t-air-search-api`
+     */
+    getResults: function(uiData) {
+        this.initiateRequest(uiData);
+    },
+
+    getNextPage: function(searchId) {
+    	this._requestPayload = null;
+        this.initiateRequest({
+        	pagingInfo: {
+	            pageNumber: this._pagingInfo.pageNumber + 1,
+	            pageSize: this._pagingInfo.pageSize
+	        },
+	        searchId: searchId 
+	    });
+    },
+
+    getPrevPage: function(searchId) {
+    	this._requestPayload = null;
+        this.initiateRequest({
+        	pagingInfo: {
+	            pageNumber: this._pagingInfo.pageNumber - 1,
+	            pageSize: this._pagingInfo.pageSize
+	        },
+	        searchId: searchId 
+	    });
+    },
+
+    /**
+     * 
+     */
+    _buildRequest: function(uiModel) {
+
+        if (uiModel) {
+        	var pInfo =  sInfo = null;
+        	if(uiModel.pagingInfo && uiModel.pagingInfo.pageSize && uiModel.pagingInfo.pageNumber){    		
+            	pInfo = uiModel.pagingInfo;
+    		}
+    		else{
+    			pInfo = this._pagingInfo;
+    		}
+
+            if(uiModel.sortingInfo && uiModel.sortingInfo.sortType && uiModel.sortingInfo.sortOrder){ 
+            	sInfo = uiModel.sortingInfo;
+    		}
+    		else{
+    			sInfo = this._sortingInfo;
+    		}
+
+
+            if (uiModel.criteria) {
+                this._setMethod('POST');
+                this._setApiRelativeUrl( this._resultsUrl + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
+                return Eva.AirSearchCriteriaTranslator.toApiModel(uiModel.criteria);
+            } 
+            else if (uiModel.searchId) {
+                this._setMethod('GET');
+                this._setApiRelativeUrl( this._resultsUrl + '/' + uiModel.searchId + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
+            }
+            else if (uiModel.filters) {
+                this._setMethod('POST');
+                this._setApiRelativeUrl( this._filterUrl + uiModel.searchId + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
+                return uiModel.filters;
+            }
+            
+
+        } else {
+            return uiModel;
+        }
+    },
+
+    _buildResponse: function(apiModel) {
+    	this._setCurrentPage( Math.ceil((apiModel.pagingInfo.stopAt / this._pagingInfo.pageSize)));
+    	this._setHasNextPage( (apiModel.pagingInfo.filteredCount -  apiModel.pagingInfo.stopAt) > 0 ? true: false);
+    	this._setHasPrevPage( apiModel.pagingInfo.startingFrom > this._pagingInfo.pageSize ? true: false);
+
+        return apiModel;
+    },
+
+    _getSortAndPageInfoQuery: function(pInfo, sInfo){
+    	var odataQuery = '';
+    	
+    	var varPath = '';
+		switch(sInfo.sortType.toLowerCase()){
+			case 'stops':
+				varPath = 'TotalStops';
+				break;
+			case 'price':
+				varPath = 'minFare/Fare/Amount';
+				break;
+			case 'duration':
+				varPath = 'duration/journey';
+				break;
+			default:
+				varPath = 'minFare/Fare/Amount';
+				break;
+		}
+		odataQuery += '$orderby=' +varPath+'+'+sInfo.sortOrder;
+
+		odataQuery += '&$top=' + pInfo.pageSize + '&$skip=' + (pInfo.pageSize*(pInfo.pageNumber-1));
+
+		return odataQuery;
+    }
+});
+</script>

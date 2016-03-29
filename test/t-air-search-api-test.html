@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+    <link rel="import" href="../../iron-meta/iron-meta.html">
+    <link rel="import" href="../t-air-search-api.html">
+  </head>
+  <body>
+    <test-fixture id="initiateSearchThroughEventsFixture">
+      <template>
+        <iron-meta key="Eva.contextName" value="mystiquedemo" type="globals"></iron-meta>
+        <iron-meta key="Eva.apiBaseUrl" value="http://demo.travelnxt.com/api/" type="globals"></iron-meta>
+        <t-air-search-api id="searchApi"></t-air-search-api>
+      </template>
+    </test-fixture>     
+    <script>
+      suite('initate search by event', function() {
+        var sarchThroughEventsFixtureNode;
+        var searchApiComp;
+        
+        setup(function() {
+          //1. load element and get element access 
+          var searchThroughEventsFixture;
+          searchThroughEventsFixture = fixture('initiateSearchThroughEventsFixture');
+          sarchThroughEventsFixtureNode = Polymer.dom(searchThroughEventsFixture.root);
+          searchApiComp = sarchThroughEventsFixtureNode.querySelector('t-air-search-api');
+        });
+
+        test('should initate search and generate search id by criteria', function(done) { 
+                    
+          //2. wait till auth token is ready
+          if(searchApiComp.isReady){
+            fireSearch();
+          }
+          else{      
+            searchApiComp.addEventListener('t-auth-api-success', function(e) {
+              fireSearch(); 
+            });
+          }
+          
+          //3. api success handlers setup
+          searchApiComp.addEventListener('t-air-search-api-success', successCallback);
+          function successCallback(e){            
+            assert.equal(e.detail.status.isSuccessful, true);
+            assert.isNotNull(e.detail.searchId, 'Got search id');
+            searchId = e.detail.searchId;
+            done();
+            searchApiComp.removeEventListener('t-air-search-api-success', successCallback);          
+          }
+
+          //4. helpers to fire api calls
+          function fireSearch(){
+            document.querySelector('body').dispatchEvent(new CustomEvent('t-air-search', {
+                detail: {
+                  adultCount: 1,
+                  adultAges: [],
+                  leg1Origin: 'LAS',
+                  leg1Destination: 'LAX',
+                  leg1Date: '05/25/2016',
+                  tripType: 'OneWay'
+                }
+              })
+            );
+          }
+          
+        });
+       
+      });
+     
+    </script>
+  </body>
+</html>

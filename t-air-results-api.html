@@ -210,14 +210,13 @@ Polymer({
         },
 
         /**
-         * Represents search id from `t-air-search-api` response. This will be used only if `auto` is set true else no has
+         * Represents request object with page/sort/filter info and it will be used only if `auto` is set true else no has
          *  impact.
          * @type {Object} Optional
          */
-        searchId:{
-            type: String,
-            value: null,
-            notify: true
+        uiRequest:{
+            type: Object,
+            value: function() { return null; }
         },
 
         /**
@@ -241,9 +240,7 @@ Polymer({
         document.querySelector('body').addEventListener(this.eventName + '-prev-page', this.getPrevPage.bind(this));
 
         if(this.auto){
-            this.initiateRequest({
-                searchId: this.searchId
-            })
+            this.initiateRequest(this.uiRequest)
         }
     },
 

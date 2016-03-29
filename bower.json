@@ -26,7 +26,8 @@
   "dependencies": {
     "polymer": "Polymer/polymer#^1.0.0",
     "iron-meta": "PolymerElements/iron-meta#^1.1.1",
-    "t-sessionstorage": "travelnxtElements/t-sessionstorage#air-api-changes"
+    "t-sessionstorage": "travelnxtElements/t-sessionstorage#air-api-changes",
+    "web-component-tester": "Polymer/web-component-tester#^4.2.2"
   },
   "devDependencies": {
     "webcomponentsjs": "~0.7.14",

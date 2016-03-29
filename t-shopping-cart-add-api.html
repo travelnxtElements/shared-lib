@@ -1,0 +1,140 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="behaviors/t-api-ajax-behavior.html">
+<link rel="import" href="behaviors/t-api-auth-behavior.html">
+<link rel="import" href="behaviors/t-api-error-message-behavior.html">
+<!--
+`t-shopping-cart-add-api` provides API to add inventory to cart. 
+
+It gives below two ways to add inventory to cart
+-   Using public api `add`
+-   Firing an event `t-shopping-cart-add` on `body`tag, check below for contract
+
+API success and failure status will be updated back through below events
+-   `t-shopping-cart-add-api-success`
+-   `t-shopping-cart-add-api-error`
+
+It depends on below iron meta keys of type 'globals' to make API call.
+
+-   `Eva.authToken` (optional, generates one if not found)
+-   `Eva.contextName` (required)
+-   `Eva.contextId` (required)
+-   `Eva.baseApiUrl` (required)
+-   `Eva.sessionApiUrlFormat` (required if server side session is supported)
+
+
+__Example__
+
+    <t-shopping-cart-add-api loading={{loading}}></t-shopping-cart-add-api>
+    <iron-meta key="Eva.contextName" value="testcontext" type="globals"></iron-meta>
+    <iron-meta key="Eva.authToken" value="testtoken" type="globals"></iron-meta>
+    <iron-meta key="Eva.apiBaseUrl" value="somedomain.com" type="globals"></iron-meta>
+    <iron-meta key="Eva.sessionApiUrlFormat" value="somedomain.com/SESSIONKEY" type="globals"></iron-meta>    
+
+__UI request object model__
+
+    {    
+        searchId: String, 
+        inventoryId: String
+    }
+
+-->
+<script>
+Polymer({
+
+    /**
+     * Fired when search API call completes with no errors.
+     * @event t-shopping-cart-add-api-success
+     * @param {{status: Object, result: Object}} object api response object, [refer here](http://demo.travelnxt.com/dev/apis/flights/search#) 
+     */
+
+    /**
+     * Fired when API call throws error (both server or network error).
+     * @event t-shopping-cart-add-api-error
+     * @param {{code: Number, message: String}} object check error codes [here](http://demo.travelnxt.com/dev/statuscodes)
+     */
+
+
+    is: "t-shopping-cart-add-api",
+
+    behaviors: [Eva.ApiAuthBehavior,
+        Eva.ApiAjaxBehavior,
+        Eva.ApiErrorMessageBehavior
+    ],
+
+    properties: {
+        /**
+         * Name of the event it subscribe to listen and initiate search. Change only 
+         * if want to use custom name to avoid conflicts etc else use default one only.
+         */
+        eventName: {
+            type: String,
+            value: 't-shopping-cart-add',
+            readOnly: true
+        },
+
+        /**
+         * Air search API relative url. Do not change until you want to point to custom end point
+         */
+        apiRelativeUrl: {
+            type: String,
+            value: 'shoppingcart/add',
+            readOnly: true
+        },
+
+        /**
+         * API call type
+         */
+        method: {
+            type: String,
+            value: 'POST',
+            readOnly: true
+        },
+
+        /**
+         * Represents request object with search id & inventory id, it will be used only if `auto` is set 
+         * true else no has impact.
+         */
+        uiRequest: {
+            type: Object,
+            value: function() {
+                return null;
+            }
+        },
+
+        /**
+         * Auto load results using provided filter/sort/page info on component load
+         */
+        auto: {
+            type: Boolean,
+            value: false
+        }
+    },
+
+    attached: function() {
+        if (this.auto) {
+            this.initiateRequest(this.uiRequest)
+        }
+    },
+
+    /**
+     * Adds specified inventory to cart
+     * @param  {Object} check above UI request model for ref   
+     */
+    search: function(uiRequest) {
+        this.initiateRequest(uiRequest);
+    },
+
+    _buildRequest: function(uiModel) {
+        if(uiModel){
+            return {
+                itemInfos: [uiModel]
+            };
+        }
+        return uiModel;
+    },
+
+    _buildResponse: function(apiModel) {
+        return apiModel;
+    }
+});
+</script>

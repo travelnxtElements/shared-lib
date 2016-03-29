@@ -32,6 +32,12 @@ __Example__
     <iron-meta key="Eva.apiBaseUrl" value="somedomain.com" type="globals"></iron-meta>
     <iron-meta key="Eva.sessionApiUrlFormat" value="somedomain.com/SESSIONKEY" type="globals"></iron-meta>    
 
+__Example to auto load results along with filter & matrix also__
+
+    <t-air-results-api loading={{loading}} auto with-filter-and-matrix ui-request='{"searchId": "String", filters: Array, sortingInfo: Object, pagingInfo: Object  }'></t-air-results-api>
+
+Note: `withFilterAndMatrix` has no support to get results on criteria basis, so ensure search is mentioned in UI request object.
+
 __UI request object to get results__
 
 		{

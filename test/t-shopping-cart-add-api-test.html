@@ -19,21 +19,21 @@
       </template>
     </test-fixture>
     <script>
-      suite('<results>', function() {
-        var resultsFixture;
+      suite('add inventory to cart by event', function() {
         var resultsFixtureNode;
         var resultsApiComp;
         var cartApiComp;
         setup(function() {
           //1. load element and get element access 
+          var resultsFixture;
           resultsFixture = fixture('resultsFixture');
           resultsFixtureNode = Polymer.dom(resultsFixture.root);
           resultsApiComp = resultsFixtureNode.querySelector('t-air-results-api');
           cartApiComp = resultsFixtureNode.querySelector('t-shopping-cart-add-api');
         });
 
-        test('should fire air search and add first inventory to shopping cart', function(done) { 
-                    
+        //TODO: remove dependency in t-air-results-api
+        test('should fire air search and add first inventory to shopping cart', function(done) {
           //2. wait till auth token is ready
           if(resultsApiComp.isReady){
             fireSearch();
@@ -81,8 +81,6 @@
                 })
               );
           }
-
-          
         });
       });
     </script>

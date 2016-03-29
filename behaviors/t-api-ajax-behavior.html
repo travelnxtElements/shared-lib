@@ -205,7 +205,7 @@ Eva.ApiAjaxBehavior = {
             this.set('apiBaseUrl', apiBaseUrl.substring(0, apiBaseUrl.length - 1));
         }
         if (!apiRelativeUrl && apiRelativeUrl.firstIndexOf('/') != 0) {
-            this.set('apiRelativeUrl', '/' + apiRelativeUrl.apiRelativeUrl);
+            this.set('apiRelativeUrl', '/' + apiRelativeUrl);
         }
 
         if((apiBaseUrl + apiRelativeUrl).indexOf('?') == -1){

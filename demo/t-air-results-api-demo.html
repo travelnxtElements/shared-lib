@@ -26,21 +26,13 @@ window.addEventListener('WebComponentsReady', function(e) {
     var apiComp = document.getElementById('resultsApi');
     var done = false;
 
-    apiComp.addEventListener(apiComp.eventName + '-api-success', function(e) {
-        
+    apiComp.addEventListener(apiComp.eventName + '-api-success', function(e) {        
         if(done){
-            alert('prev page results success - ' + e.detail.searchId);            
+            alert('filter results success - ' + e.detail.searchId);            
             return;
         }
-
-        if(apiComp.currentPage == 1){            
+        else{
             alert('results success - ' + e.detail.searchId);
-            apiComp.getNextPage(e.detail.searchId);
-        }
-        if(apiComp.currentPage == 2 && apiComp.hasPrevPage){
-            alert('next page results success - ' + e.detail.searchId);            
-            apiComp.getPrevPage(e.detail.searchId);
-            done = true
         }
     });
 
@@ -68,12 +60,13 @@ window.addEventListener('WebComponentsReady', function(e) {
 
         var event = new CustomEvent('t-air-results', {
             'detail': {
-                'criteria': criteria
+                'searchId': '1f0ceeb1-c55a-4c11-a996-e8f04e82eb45'
             }
         });
 
         document.querySelector('body').dispatchEvent(event);
     }
+
 });
 </script>
 

@@ -200,11 +200,21 @@ Polymer({
         	}
         },
 
+        /**
+         * If true, filters will also be fetched in same results api call, but for this search id is mandatory
+         * Use `t-air-filter-api` to get filter separately.
+         */
+        withFilter: {
+        	type: Boolean,
+        	value: false
+        }
     },
 
     _resultsUrl: 'flight/results',
 
     _filterUrl: 'flight/results/filter',
+
+    _clubbedUrl: 'flight/results/clubbed',
 
     attached: function() {
         document.querySelector('body').addEventListener(this.eventName + '-next-page', this.getNextPage.bind(this));;
@@ -269,14 +279,25 @@ Polymer({
                 this._setApiRelativeUrl( this._resultsUrl + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
                 return Eva.AirSearchCriteriaTranslator.toApiModel(uiModel.criteria);
             } 
-            else if (uiModel.searchId) {
-                this._setMethod('GET');
-                this._setApiRelativeUrl( this._resultsUrl + '/' + uiModel.searchId + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
-            }
             else if (uiModel.filters) {
                 this._setMethod('POST');
-                this._setApiRelativeUrl( this._filterUrl + uiModel.searchId + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
+                if(this.withFilter){
+                	this._setApiRelativeUrl( this._clubbedUrl + '/' + uiModel.searchId + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
+                }
+                else{
+                	this._setApiRelativeUrl( this._filterUrl + uiModel.searchId + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
+                }
                 return uiModel.filters;
+            }
+            else if (uiModel.searchId) {                
+                if(this.withFilter){
+                	this._setMethod('POST');
+                	this._setApiRelativeUrl( this._clubbedUrl + '/' + uiModel.searchId + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
+                }
+                else{
+                	this._setMethod('GET');
+                	this._setApiRelativeUrl( this._resultsUrl + '/' + uiModel.searchId + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
+                }
             }
             
 

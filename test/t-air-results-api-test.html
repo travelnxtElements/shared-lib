@@ -1,0 +1,168 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+    <link rel="import" href="../../iron-meta/iron-meta.html">
+    <link rel="import" href="../t-air-results-api.html">
+  </head>
+  <body>
+    <test-fixture id="resultsThroughEventsFixture">
+      <template>
+        <iron-meta key="Eva.contextName" value="mystiquedemo" type="globals"></iron-meta>
+        <iron-meta key="Eva.apiBaseUrl" value="http://demo.travelnxt.com/api/" type="globals"></iron-meta>
+        <t-air-results-api id="resultsApi"></t-air-results-api>
+      </template>
+    </test-fixture>
+    <test-fixture id="autoLoadResultsFixture">
+      <template>
+        <iron-meta key="Eva.contextName" value="mystiquedemo" type="globals"></iron-meta>
+        <iron-meta key="Eva.apiBaseUrl" value="http://demo.travelnxt.com/api/" type="globals"></iron-meta>
+        <t-air-results-api id="resultsApi" auto ui-request='{"criteria": { "adultCount": 1, "adultAges": [], "leg1Origin": "LAS", "leg1Destination": "LAX", "leg1Date": "05/25/2016", "tripType": "OneWay"}}' ></t-air-results-api>
+      </template>
+    </test-fixture>    
+    <script>
+      suite('results by events', function() {
+        var resultsThroughEventsFixtureNode;
+        var resultsApiComp;
+        var searchId;
+        
+        setup(function() {
+          //1. load element and get element access 
+          var resultsThroughEventsFixture;
+          resultsThroughEventsFixture = fixture('resultsThroughEventsFixture');
+          resultsThroughEventsFixtureNode = Polymer.dom(resultsThroughEventsFixture.root);
+          resultsApiComp = resultsThroughEventsFixtureNode.querySelector('t-air-results-api');
+        });
+
+        test('should get results by criteria', function(done) { 
+                    
+          //2. wait till auth token is ready
+          if(resultsApiComp.isReady){
+            fireSearch();
+          }
+          else{      
+            resultsApiComp.addEventListener('t-auth-api-success', function(e) {
+              fireSearch(); 
+            });
+          }
+          
+          //3. api success handlers setup
+          resultsApiComp.addEventListener('t-air-results-api-success', successCallback);
+          function successCallback(e){            
+            assert.equal(e.detail.status.isSuccessful, true);
+            searchId = e.detail.searchId;
+            done();
+            resultsApiComp.removeEventListener('t-air-results-api-success', successCallback);          
+          }
+
+          //4. helpers to fire api calls
+          function fireSearch(){
+            document.querySelector('body').dispatchEvent(new CustomEvent('t-air-results', {
+                detail: {
+                    criteria: {
+                      adultCount: 1,
+                      adultAges: [],
+                      leg1Origin: 'LAS',
+                      leg1Destination: 'LAX',
+                      leg1Date: '05/25/2016',
+                      tripType: 'OneWay'
+                  }
+                }
+              })
+            );
+          }
+          
+        });
+
+        test('should get results by searchId', function(done) { 
+                    
+          //2. wait till auth token is ready
+          if(resultsApiComp.isReady){
+            fireSearch();
+          }
+          else{      
+            resultsApiComp.addEventListener('t-auth-api-success', function(e) {
+              fireSearch(); 
+            });
+          }
+          
+          //3. api success handlers setup
+          resultsApiComp.addEventListener('t-air-results-api-success', successCallback);
+          function successCallback(e){            
+            assert.equal(e.detail.status.isSuccessful, true);           
+            done();
+            resultsApiComp.removeEventListener('t-air-results-api-success', successCallback);          
+          }
+
+          //4. helpers to fire api calls
+          function fireSearch(){
+            document.querySelector('body').dispatchEvent(new CustomEvent('t-air-results', {
+                detail: {
+                    searchId: searchId
+                }
+              })
+            );
+          }          
+        }); 
+
+        test('should get results + filters + matrix by searchId', function(done) { 
+                    
+          //2. wait till auth token is ready
+          if(resultsApiComp.isReady){
+            fireSearch();
+          }
+          else{      
+            resultsApiComp.addEventListener('t-auth-api-success', function(e) {
+              fireSearch(); 
+            });
+          }
+          
+          //3. api success handlers setup
+          resultsApiComp.addEventListener('t-air-results-api-success', function(e) {           
+            assert.isNotNull(e.detail.inventories, 'got inventories');           
+            assert.equal(!!e.detail.filters, true, 'got filters');  
+            assert.equal(!!e.detail.matrix, true, 'got matrix');           
+            done();
+          });
+
+          //4. helpers to fire api calls
+          function fireSearch(){
+            resultsApiComp.withFilterAndMatrix = true;
+            document.querySelector('body').dispatchEvent(new CustomEvent('t-air-results', {
+                detail: {
+                    searchId: searchId
+                }
+              })
+            );
+          }          
+        });   
+
+
+      });
+
+      // suite('auto load results', function(){
+      //   var resultsThroughEventsFixtureNode;
+      //   var resultsApiComp;
+        
+      //   setup(function() {
+      //     //1. load element and get element access 
+      //     var autoLoadResultsFixture;
+      //     autoLoadResultsFixture = fixture('autoLoadResultsFixture');
+      //     autoLoadResultsFixtureNode = Polymer.dom(autoLoadResultsFixture.root);
+      //     resultsApiComp = autoLoadResultsFixtureNode.querySelector('t-air-results-api');
+      //   });
+      //   test('auto load results on attached', function(done) {       
+      //     //1. api success handlers setup
+      //     resultsApiComp.addEventListener('t-air-results-api-success', function(e) {             
+      //       assert.equal(e.detail.status.isSuccessful, true);           
+      //       done();
+      //     });
+      //   });
+      // });
+      
+     
+    </script>
+  </body>
+</html>

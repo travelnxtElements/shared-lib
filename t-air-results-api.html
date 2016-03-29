@@ -201,10 +201,10 @@ Polymer({
         },
 
         /**
-         * If true, filters will also be fetched in same results api call, but for this search id is mandatory
+         * If true, filters & matrix will also be fetched in same results api call. For this search id is mandatory and not supported with criteria basis results call.
          * Use `t-air-filter-api` to get filter separately.
          */
-        withFilter: {
+        withFilterAndMatrix: {
         	type: Boolean,
         	value: false
         },
@@ -304,7 +304,7 @@ Polymer({
             } 
             else if (uiModel.filters) {
                 this._setMethod('POST');
-                if(this.withFilter){
+                if(this.withFilterAndMatrix){
                 	this._setApiRelativeUrl( this._clubbedUrl + '/' + uiModel.searchId + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
                 }
                 else{
@@ -313,7 +313,7 @@ Polymer({
                 return uiModel.filters;
             }
             else if (uiModel.searchId) {                
-                if(this.withFilter){
+                if(this.withFilterAndMatrix){
                 	this._setMethod('POST');
                 	this._setApiRelativeUrl( this._clubbedUrl + '/' + uiModel.searchId + '?' + this._getSortAndPageInfoQuery(pInfo, sInfo) );
                 }

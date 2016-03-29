@@ -207,7 +207,27 @@ Polymer({
         withFilter: {
         	type: Boolean,
         	value: false
+        },
+
+        /**
+         * Represents search id from `t-air-search-api` response. This will be used only if `auto` is set true else no has
+         *  impact.
+         * @type {Object} Optional
+         */
+        searchId:{
+            type: String,
+            value: null,
+            notify: true
+        },
+
+        /**
+         * Auto load results using provided filter/sort/page info on page load
+         */
+        auto: {
+            type: Boolean,
+            value: false
         }
+
     },
 
     _resultsUrl: 'flight/results',
@@ -217,8 +237,14 @@ Polymer({
     _clubbedUrl: 'flight/results/clubbed',
 
     attached: function() {
-        document.querySelector('body').addEventListener(this.eventName + '-next-page', this.getNextPage.bind(this));;
-        document.querySelector('body').addEventListener(this.eventName + '-prev-page', this.getPrevPage.bind(this));;
+        document.querySelector('body').addEventListener(this.eventName + '-next-page', this.getNextPage.bind(this));
+        document.querySelector('body').addEventListener(this.eventName + '-prev-page', this.getPrevPage.bind(this));
+
+        if(this.auto){
+            this.initiateRequest({
+                searchId: this.searchId
+            })
+        }
     },
 
     /**
@@ -307,6 +333,7 @@ Polymer({
     },
 
     _buildResponse: function(apiModel) {
+        this.searchId = apiModel.searchId;
     	this._setCurrentPage( Math.ceil((apiModel.pagingInfo.stopAt / this._pagingInfo.pageSize)));
     	this._setHasNextPage( (apiModel.pagingInfo.filteredCount -  apiModel.pagingInfo.stopAt) > 0 ? true: false);
     	this._setHasPrevPage( apiModel.pagingInfo.startingFrom > this._pagingInfo.pageSize ? true: false);

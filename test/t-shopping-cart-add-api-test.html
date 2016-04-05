@@ -10,7 +10,7 @@
   </head>
   <body>
     <!-- use the document as a place to set up your fixtures -->
-    <test-fixture id="resultsFixture">
+    <test-fixture id="addInventoryThroughEventFixture">
       <template>
         <iron-meta key="Eva.contextName" value="mystiquedemo" type="globals"></iron-meta>
         <iron-meta key="Eva.apiBaseUrl" value="http://demo.travelnxt.com/api/" type="globals"></iron-meta>
@@ -20,16 +20,16 @@
     </test-fixture>
     <script>
       suite('add inventory to cart by event', function() {
-        var resultsFixtureNode;
+        var addInventoryThroughEventFixtureNode;
         var resultsApiComp;
         var cartApiComp;
         setup(function() {
           //1. load element and get element access 
-          var resultsFixture;
-          resultsFixture = fixture('resultsFixture');
-          resultsFixtureNode = Polymer.dom(resultsFixture.root);
-          resultsApiComp = resultsFixtureNode.querySelector('t-air-results-api');
-          cartApiComp = resultsFixtureNode.querySelector('t-shopping-cart-add-api');
+          var addInventoryThroughEventFixture;
+          addInventoryThroughEventFixture = fixture('addInventoryThroughEventFixture');
+          addInventoryThroughEventFixtureNode = Polymer.dom(addInventoryThroughEventFixture.root);
+          resultsApiComp = addInventoryThroughEventFixtureNode.querySelector('t-air-results-api');
+          cartApiComp = addInventoryThroughEventFixtureNode.querySelector('t-shopping-cart-add-api');
         });
 
         //TODO: remove dependency in t-air-results-api

@@ -6,7 +6,7 @@
 `t-shopping-cart-add-api` provides API to add inventory to cart. 
 
 It gives below two ways to add inventory to cart
--   Using public api `add`
+-   Using public api `addInventory`
 -   Firing an event `t-shopping-cart-add` on `body`tag, check below for contract
 
 API success and failure status will be updated back through below events
@@ -120,7 +120,7 @@ Polymer({
      * Adds specified inventory to cart
      * @param  {Object} check above UI request model for ref   
      */
-    search: function(uiRequest) {
+    addInventory: function(uiRequest) {
         this.initiateRequest(uiRequest);
     },
 

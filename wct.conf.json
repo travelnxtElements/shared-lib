@@ -1,0 +1,12 @@
+{
+  "clientOptions": {
+    "environmentImports": []
+  },
+  "verbose": true,
+  "plugins": {
+    "local": {
+      "browsers": ["chrome"]
+    }
+  },
+  "testTimeout": 600000
+}

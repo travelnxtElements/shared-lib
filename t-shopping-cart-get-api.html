@@ -1,0 +1,118 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="behaviors/t-api-ajax-behavior.html">
+<link rel="import" href="behaviors/t-api-auth-behavior.html">
+<link rel="import" href="behaviors/t-api-error-message-behavior.html">
+<!--
+`t-shopping-cart-get-api` provides API to get current in-progress shopping cart.
+
+It gives below two ways to add inventory to cart
+-   Using public api `get`
+-   Firing an event `t-shopping-cart-get` on `body`tag, check below for contract
+
+API success and failure status will be updated back through below events
+-   `t-shopping-cart-get-api-success`
+-   `t-shopping-cart-get-api-error`
+
+It depends on below iron meta keys of type 'globals' to make API call.
+
+-   `Eva.authToken` (optional, generates one if not found)
+-   `Eva.contextName` (required)
+-   `Eva.contextId` (required)
+-   `Eva.baseApiUrl` (required)
+-   `Eva.sessionApiUrlFormat` (required if server side session is supported)
+
+
+__Example__
+
+    <t-shopping-cart-get-api loading={{loading}}></t-shopping-cart-get-api>
+    <iron-meta key="Eva.contextName" value="testcontext" type="globals"></iron-meta>
+    <iron-meta key="Eva.authToken" value="testtoken" type="globals"></iron-meta>
+    <iron-meta key="Eva.apiBaseUrl" value="somedomain.com" type="globals"></iron-meta>
+    <iron-meta key="Eva.sessionApiUrlFormat" value="somedomain.com/SESSIONKEY" type="globals"></iron-meta>    
+
+
+-->
+<script>
+Polymer({
+
+    /**
+     * Fired when search API call completes with no errors.
+     * @event t-shopping-cart-get-api-success
+     * @param {{status: Object, items: Array}} object api response object, [refer here](http://demo.travelnxt.com/dev/apis/trip%20cart/get%20shopping%20cart#) 
+     */
+
+    /**
+     * Fired when API call throws error (both server or network error).
+     * @event t-shopping-cart-get-api-error
+     * @param {{code: Number, message: String}} object check error codes [here](http://demo.travelnxt.com/dev/statuscodes)
+     */
+
+
+    is: "t-shopping-cart-get-api",
+
+    behaviors: [Eva.ApiAuthBehavior,
+        Eva.ApiAjaxBehavior,
+        Eva.ApiErrorMessageBehavior
+    ],
+
+    properties: {
+        /**
+         * Name of the event it subscribe to listen and initiate search. Change only 
+         * if want to use custom name to avoid conflicts etc else use default one only.
+         */
+        eventName: {
+            type: String,
+            value: 't-shopping-cart-get',
+            readOnly: true
+        },
+
+        /**
+         * Air search API relative url. Do not change until you want to point to custom end point
+         */
+        apiRelativeUrl: {
+            type: String,
+            value: 'shoppingcart',
+            readOnly: true
+        },
+
+        /**
+         * API call type
+         */
+        method: {
+            type: String,
+            value: 'GET',
+            readOnly: true
+        },
+
+        /**
+         * Auto load results using provided filter/sort/page info on component load
+         */
+        auto: {
+            type: Boolean,
+            value: false
+        }
+    },
+
+    attached: function() {
+        if (this.auto) {
+            this.initiateRequest()
+        }
+    },
+
+    /**
+     * Adds specified inventory to cart
+     * @param  {Object} check above UI request model for ref   
+     */
+    getCart: function(uiRequest) {
+        this.initiateRequest(uiRequest);
+    },
+
+    _buildRequest: function(uiModel) {
+        return uiModel;
+    },
+
+    _buildResponse: function(apiModel) {
+        return apiModel;
+    }
+});
+</script>

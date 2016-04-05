@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="../../web-component-tester/browser.js"></script>
+    <link rel="import" href="../../iron-meta/iron-meta.html">
+    <link rel="import" href="../t-shopping-cart-get-api.html">
+  </head>
+  <body>
+    <test-fixture id="getCartByEventFixture">
+      <template>
+        <iron-meta key="Eva.contextName" value="mystiquedemo" type="globals"></iron-meta>
+        <iron-meta key="Eva.apiBaseUrl" value="http://demo.travelnxt.com/api/" type="globals"></iron-meta>
+        <t-shopping-cart-get-api></t-shopping-cart-get-api>
+      </template>
+    </test-fixture>
+    <script>
+      suite('get current shopping cart by event', function() {
+        var getCartByEventFixtureNode;
+        var cartApiComp;
+        setup(function() {
+          //1. load element and get element access 
+          var getCartByEventFixture;
+          getCartByEventFixture = fixture('getCartByEventFixture');
+          getCartByEventFixtureNode = Polymer.dom(getCartByEventFixture.root);
+          cartApiComp = getCartByEventFixtureNode.querySelector('t-shopping-cart-get-api');
+        });
+
+        test('should get current shopping cart', function(done) {
+          //2. wait till auth token is ready
+          if(cartApiComp.isReady){
+            fireGet();
+          }
+          else{      
+            cartApiComp.addEventListener('t-auth-api-success', function(e) {
+              fireGet(); 
+            });
+          }
+          
+          //3. api success handlers setup
+          cartApiComp.addEventListener('t-shopping-cart-get-api-success', function(e) {            
+            assert.equal(e.detail.status.isSuccessful, true);
+            done();
+          });
+
+          //4. helpers to fire api calls
+          function fireGet(){
+            document.querySelector('body').dispatchEvent(new CustomEvent('t-shopping-cart-get'));
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

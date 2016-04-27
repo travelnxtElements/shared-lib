@@ -1,6 +1,6 @@
 {
   "name": "t-shared-lib",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "authors": [
     "Rahul Pilkhwal <rahul.pilkhwal@tavisca.com>",
     "Shailesh Kumar Srivastava <ssrivastava@tavisca.com>",
@@ -23,8 +23,6 @@
     "test",
     "tests"
   ],
-  "dependencies": {
-  },
-  "devDependencies": {
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }

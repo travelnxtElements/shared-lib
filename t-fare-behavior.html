@@ -12,10 +12,16 @@
                 }
             },
 
-            _totalFare: {
+            _currency:{
+                type: String,
+                notify: false,
+                computed: '_getCurrency(_components)'
+            },
+
+            _baseFare: {
                 type: Object,
                 notify: false,
-                computed: '_computeFare(_components, "totalFare")'
+                computed: '_computeFare(_components, "basefare")'
             },
 
             _discount: {
@@ -24,11 +30,23 @@
                 computed: '_computeFare(_components, "totaldiscount")'
             },
 
-            _totalFareWithOutDiscount: {
+            _savings: {
                 type: Object,
                 notify: false,
-                computed: '_computeFareWithOutDiscount(_totalFare, _discount)'
+                computed: '_computeFare(_components, "totalsaving")'
             },
+
+            _baseFareWithoutSavings: {
+                type: Object,
+                notify: false,
+                computed: '_computeFareWithoutSavings(_baseFare, _savings)'
+            },
+
+            _baseFareWithDiscount: {
+                type: Object,
+                notify: false,
+                computed: '_computeFareWithDiscount(_baseFare, _discount)'
+            }
         },
 
         _computeFare: function(components, type){
@@ -40,23 +58,52 @@
                 };
             }
             return null;
-        },     
-        _computeFareWithOutDiscount: function(_totalFare, _discount){
-            if(!_totalFare)
+        },
+
+        _computeFareWithoutSavings: function(_baseFare, _savings){
+            if(!_baseFare)
                 return null;
 
             var fare = {
                     money: {
-                        amount: _totalFare.money.amount,
-                        currency: _totalFare.money.currency,
+                        amount: _baseFare.money.amount,
+                        currency: _baseFare.money.currency,
+                        displayAmount: ''  //set formatted value after intergating globalization
+                    }
+                };
+
+            if(_savings){
+                fare.money.amount += _savings.money.amount;
+            }
+            return fare;
+        },
+
+        _computeFareWithDiscount: function(_baseFare, _discount){
+            if(!_baseFare)
+                return null;
+
+            var fare = {
+                    money: {
+                        amount: _baseFare.money.amount,
+                        currency: _baseFare.money.currency,
                         displayAmount: ''  //set formatted value after intergating globalization
                     }
                 };
 
             if(_discount){
-                fare.money.amount += _discount.money.amount;
+                fare.money.amount -= _discount.money.amount;
             }
             return fare;
+        },
+
+        _getCurrency:function (_components) {
+            if(!_components || !_components.length){
+                return '';
+            }
+            if (!_components[0].money) {
+                return '';
+            }
+            return _components[0].money.currency;
         }
     };
 </script>

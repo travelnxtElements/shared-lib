@@ -13,7 +13,7 @@ TravelNxt.Behaviors.FareBehavior = {
 
         _isBasePrice: {
             type: Boolean,
-            value: false
+            value: true
         },
 
         _currency: {
@@ -80,10 +80,6 @@ TravelNxt.Behaviors.FareBehavior = {
             if (discount) {
                 tempPrice.money.amount += discount.money.amount;
                 this._useMoneyComponents(tempPrice, discount, true);
-            }
-            if (savings) {
-                tempPrice.money.amount += savings.money.amount;
-                this._useMoneyComponents(tempPrice, savings, true);
             }
         }
 

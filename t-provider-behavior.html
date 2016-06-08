@@ -180,7 +180,7 @@ TravelNxt.Behaviors.ProviderBehavior = {
 
         var error = {
             message: 'Connection error occured, please try again.',
-            code: event.detail.request.status
+            code: event.detail.request.status || 500
         };
 
         this._setLastError(error);

@@ -99,13 +99,21 @@ TravelNxt.Behaviors.ProviderBehavior = {
 
     _getUrl: function() {
         //sanitize urls before use
+        var queryString = '';
+
         if (!this.apiBaseUrl && this.apiBaseUrl.lastIndexOf('/') == this.apiBaseUrl.length - 1) {
             this.set('apiBaseUrl', this.apiBaseUrl.substring(0, this.apiBaseUrl.length - 1));
         }
         if (!this.apiRelativeUrl && this.apiRelativeUrl.firstIndexOf('/') != 0) {
             this.set('apiRelativeUrl', '/' + this.apiRelativeUrl);
         }
-        return this.apiBaseUrl + this.apiRelativeUrl + '?token=' + this.authToken;
+        if (this.queryParams && this.queryParams.length) {
+            for (var i = 0; i < this.queryParams.length; i++) {
+                var key = Object.keys(this.queryParams[i])[0];
+                queryString += '&' + key + '=' + this.queryParams[i][key];
+            }
+        }
+        return this.apiBaseUrl + this.apiRelativeUrl + '?token=' + this.authToken + queryString;
     },
 
     _validateApiMeta: function() {

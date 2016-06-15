@@ -1,0 +1,24 @@
+<script>
+TravelNxt = window.TravelNxt || {};
+TravelNxt.Behaviors = TravelNxt.Behaviors || {};
+TravelNxt.Behaviors.DateBehavior = {
+    properties: {
+
+    },
+
+    _dateDiff: function(fromDate, toDate) {
+        if (!fromDate || !toDate)
+            return 0;
+        if (typeof fromDate == 'string') {
+            fromDate = new Date(fromDate);
+        }
+        if (typeof toDate == 'string') {
+            toDate = new Date(toDate);
+        }
+        var diff = toDate - fromDate;
+        var divideBy = (24 * 60 * 60 * 1000);
+
+        return Math.floor(diff / divideBy);
+    }
+};
+</script>

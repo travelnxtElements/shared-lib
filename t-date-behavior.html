@@ -19,6 +19,43 @@ TravelNxt.Behaviors.DateBehavior = {
         var divideBy = (24 * 60 * 60 * 1000);
 
         return Math.floor(diff / divideBy);
+    },
+
+    _getTimeDiff: function(fromTime, toTime, is24Hour) {
+
+        if (!fromDate || !toDate) {
+            console.error('fromTime & toTime are mandatory values!');
+        }
+
+        if (!is24Hour) {
+
+            if ((fromTime.toLowerCase().indexOf('am') < 0 && fromTime.toLowerCase().indexOf('pm') < 0) ||
+                (toTime.toLowerCase().indexOf('am') < 0 && toTime.toLowerCase().indexOf('pm') < 0)) {
+                console.error('Invalid time format!');
+            }
+
+            if (fromTime.toLowerCase().indexOf('am')) {
+                fromTime = fromTime.toLowerCase().split('am')[0].trim();
+                fromDate = parseFloat(fromDate) + 12;
+            } else {
+                fromTime = fromTime.toLowerCase().split('pm')[0].trim();
+                fromDate = parseFloat(fromDate)
+            }
+
+            if (toTime.toLowerCase().indexOf('am')) {
+                toTime = toTime.toLowerCase().split('am')[0].trim();
+                toTime = parseFloat(toTime) + 12;
+            } else {
+                toTime = toTime.toLowerCase().split('pm')[0].trim();
+                toTime = parseFloat(toTime)
+            }
+        }
+
+        if (isNaN(fromTime) || isNaN(toTime)) {
+            console.error('Invalid time format!');
+        }
+
+        return toTime - fromTime;
     }
 };
 </script>

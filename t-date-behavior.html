@@ -23,7 +23,7 @@ TravelNxt.Behaviors.DateBehavior = {
 
     _getTimeDiff: function(fromTime, toTime, is24Hour) {
 
-        if (!fromDate || !toDate) {
+        if (!fromTime || !toTime) {
             console.error('fromTime & toTime are mandatory values!');
         }
 
@@ -36,10 +36,10 @@ TravelNxt.Behaviors.DateBehavior = {
 
             if (fromTime.toLowerCase().indexOf('am')) {
                 fromTime = fromTime.toLowerCase().split('am')[0].trim();
-                fromDate = parseFloat(fromDate) + 12;
+                fromTime = parseFloat(fromTime) + 12;
             } else {
                 fromTime = fromTime.toLowerCase().split('pm')[0].trim();
-                fromDate = parseFloat(fromDate)
+                fromTime = parseFloat(fromTime)
             }
 
             if (toTime.toLowerCase().indexOf('am')) {

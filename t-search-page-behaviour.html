@@ -43,6 +43,11 @@ Polymer.SearchPageBehaviour = {
             value: ''
         },
 
+        searchId: {
+            type: String,
+            notify:true
+        },
+
         visible: {
             type: Boolean,
             value:false,
@@ -89,7 +94,7 @@ Polymer.SearchPageBehaviour = {
     _visibleChanged: function(visible) {
         if (visible) {
             // Notify the section's title
-            this.fire('change-section', this._sessionKeys.searchCriteria);
+            this.fire('change-section');
         }
     },
     /*
@@ -112,15 +117,9 @@ Polymer.SearchPageBehaviour = {
      * <p>This is page component level method to get data from session</p>
      * <p>This should be moved in page component behaviour</p>
      */
-    _getFromSessionStore: function(key) {
-
-        if (!key.detail) {
-            return;
-        }
-
-        this.$.sessionStore.key = key.detail;
-
-        return this.$.sessionStore.load();
+    _getFromSessionStore: function() {
+        this.$.sessionStore.key = this._sessionKeys.searchCriteria;
+        this.$.sessionStore.load();
     },
 
     _showProgress: function(inProgress) {
@@ -196,9 +195,16 @@ Polymer.SearchPageBehaviour = {
     onSessionLoad: function(e) {
         if (this.$.sessionStore.key === this._sessionKeys.searchCriteria) {
             this.resetView();
+            this.$.sessionStore.value = null;
+            this.$.sessionStore.key = this._sessionKeys.searchId;
+            this.$.sessionStore.load();
+        } else if (this.$.sessionStore.key === this._sessionKeys.searchId) {
+            this._setSearchId();
         }
     },
-
+    _setSearchId: function(){
+        this.searchId = this.$.sessionStore.value;
+    },
     /*
      * <p>This method resets the view by using saved data in session</p>
      * <p>It calles child views' resetView method to propogate the reset event</p>

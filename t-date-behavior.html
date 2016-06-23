@@ -1,61 +1,138 @@
 <script>
-TravelNxt = window.TravelNxt || {};
-TravelNxt.Behaviors = TravelNxt.Behaviors || {};
-TravelNxt.Behaviors.DateBehavior = {
-    properties: {
+(function() {
+    TravelNxt = window.TravelNxt || {};
+    TravelNxt.Behaviors = TravelNxt.Behaviors || {};
+    TravelNxt.Behaviors.DateBehavior = {
 
-    },
+        properties: {
 
-    _dateDiff: function(fromDate, toDate) {
-        if (!fromDate || !toDate)
-            return 0;
-        if (typeof fromDate == 'string') {
-            fromDate = new Date(fromDate);
-        }
-        if (typeof toDate == 'string') {
-            toDate = new Date(toDate);
-        }
-        var diff = toDate - fromDate;
-        var divideBy = (24 * 60 * 60 * 1000);
+        },
 
-        return Math.floor(diff / divideBy);
-    },
+        _dateDiff: function(fromDate, toDate) {
+            if (!fromDate || !toDate)
+                return 0;
+            if (typeof fromDate == 'string') {
+                fromDate = new Date(fromDate);
+            }
+            if (typeof toDate == 'string') {
+                toDate = new Date(toDate);
+            }
+            var diff = toDate - fromDate;
+            var divideBy = (24 * 60 * 60 * 1000);
 
-    _getTimeDiff: function(fromTime, toTime, is24Hour) {
+            return Math.floor(diff / divideBy);
+        },
 
-        if (!fromTime || !toTime) {
-            console.error('fromTime & toTime are mandatory values!');
-        }
+        _getTimeDiff: function(fromTime, toTime, is24Hour) {
 
-        if (!is24Hour) {
+            if (!fromTime || !toTime) {
+                console.error('fromTime & toTime are mandatory values!');
+            }
 
-            if ((fromTime.toLowerCase().indexOf('am') < 0 && fromTime.toLowerCase().indexOf('pm') < 0) ||
-                (toTime.toLowerCase().indexOf('am') < 0 && toTime.toLowerCase().indexOf('pm') < 0)) {
+            if (!is24Hour) {
+
+                if ((fromTime.toLowerCase().indexOf('am') < 0 && fromTime.toLowerCase().indexOf('pm') < 0) ||
+                    (toTime.toLowerCase().indexOf('am') < 0 && toTime.toLowerCase().indexOf('pm') < 0)) {
+                    console.error('Invalid time format!');
+                }
+
+                if (fromTime.toLowerCase().indexOf('am')) {
+                    fromTime = fromTime.toLowerCase().split('am')[0].trim();
+                    fromTime = parseFloat(fromTime) + 12;
+                } else {
+                    fromTime = fromTime.toLowerCase().split('pm')[0].trim();
+                    fromTime = parseFloat(fromTime)
+                }
+
+                if (toTime.toLowerCase().indexOf('am')) {
+                    toTime = toTime.toLowerCase().split('am')[0].trim();
+                    toTime = parseFloat(toTime) + 12;
+                } else {
+                    toTime = toTime.toLowerCase().split('pm')[0].trim();
+                    toTime = parseFloat(toTime)
+                }
+            }
+
+            if (isNaN(fromTime) || isNaN(toTime)) {
                 console.error('Invalid time format!');
             }
 
-            if (fromTime.toLowerCase().indexOf('am')) {
-                fromTime = fromTime.toLowerCase().split('am')[0].trim();
-                fromTime = parseFloat(fromTime) + 12;
-            } else {
-                fromTime = fromTime.toLowerCase().split('pm')[0].trim();
-                fromTime = parseFloat(fromTime)
+            return toTime - fromTime;
+        },
+
+        _getDateComponents: function(date) {
+
+            if (!date || date.constructor.name !== "Date") {
+                try {
+                    date = new Date(date);
+                } catch (e) {
+                    return null;
+                }
             }
 
-            if (toTime.toLowerCase().indexOf('am')) {
-                toTime = toTime.toLowerCase().split('am')[0].trim();
-                toTime = parseFloat(toTime) + 12;
-            } else {
-                toTime = toTime.toLowerCase().split('pm')[0].trim();
-                toTime = parseFloat(toTime)
-            }
-        }
+            console.log(date);
 
-        if (isNaN(fromTime) || isNaN(toTime)) {
-            console.error('Invalid time format!');
-        }
+            var date = date.getDate();
+            var day = daysOfWeek[date.getDay()];
+            var month = monthMapping[x.getMonth() + 1];
+            var year = x.getFullYear();
 
-        return toTime - fromTime;
-    }
-};
+            return {
+                day: day,
+                date: date,
+                shortMonth: month.short,
+                fullMonth: month.full
+            };
+        }
+    };
+
+    var monthMapping = [{
+        short: 'Jan',
+        full: 'January'
+    }, {
+        short: 'Feb',
+        full: 'February'
+    }, {
+        short: 'Mar',
+        full: 'March'
+    }, {
+        short: 'April',
+        full: 'April'
+    }, {
+        short: 'May',
+        full: 'May'
+    }, {
+        short: 'June',
+        full: 'June'
+    }, {
+        short: 'July',
+        full: 'July'
+    }, {
+        short: 'Aug',
+        full: 'August'
+    }, {
+        short: 'Sept',
+        full: 'September'
+    }, {
+        short: 'Oct',
+        full: 'October'
+    }, {
+        short: 'Nov',
+        full: 'November'
+    }, {
+        short: 'Dec',
+        full: 'December'
+    }];
+
+    var daysOfWeek = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+    ];
+
+})();
 </script>

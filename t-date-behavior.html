@@ -60,22 +60,20 @@
             return toTime - fromTime;
         },
 
-        _getDateComponents: function(date) {
+        _getDateComponents: function(dateString) {
 
-            if (!date || date.constructor.name !== "Date") {
+            if (!dateString || dateString.constructor.name !== "DateString") {
                 try {
-                    date = new Date(date);
+                    dateString = new Date(dateString);
                 } catch (e) {
                     return null;
                 }
             }
 
-            console.log(date);
-
-            var date = date.getDate();
-            var day = daysOfWeek[date.getDay()];
-            var month = monthMapping[x.getMonth() + 1];
-            var year = x.getFullYear();
+            var date = dateString.getDate();
+            var day = daysOfWeek[dateString.getDay()];
+            var month = monthMapping[dateString.getMonth()];
+            var year = dateString.getFullYear();
 
             return {
                 day: day,
@@ -96,22 +94,22 @@
         short: 'Mar',
         full: 'March'
     }, {
-        short: 'April',
+        short: 'Apr',
         full: 'April'
     }, {
         short: 'May',
         full: 'May'
     }, {
-        short: 'June',
+        short: 'Jun',
         full: 'June'
     }, {
-        short: 'July',
+        short: 'Jul',
         full: 'July'
     }, {
         short: 'Aug',
         full: 'August'
     }, {
-        short: 'Sept',
+        short: 'Sep',
         full: 'September'
     }, {
         short: 'Oct',

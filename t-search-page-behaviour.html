@@ -183,6 +183,9 @@ Polymer.SearchPageBehaviour = {
      */
     onSessionSave: function(e) {
         if (this.$.sessionStore.key === this._sessionKeys.searchId) {
+            this.queryParams = {
+                searchId : this.searchId
+            };
             this.fire('search-success', {
                 searchId: this.searchId
             });

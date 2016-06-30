@@ -81,6 +81,13 @@
                 shortMonth: month.short,
                 fullMonth: month.full
             };
+        },
+        
+        _getDate: function(val) {
+            var dateObj = new Date(val);
+            var date = dateObj.getDate() < 10 ? '0' + dateObj.getDate() : dateObj.getDate();
+            var month = dateObj.toDateString().substr(3, 5);
+            return (date + " " + month).trim();
         }
     };
 

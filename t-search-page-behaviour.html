@@ -157,7 +157,10 @@ Polymer.SearchPageBehaviour = {
         
         //setting the search Id global for all pages in app
         this.searchId = e.detail.searchId;
-
+        
+        this.queryParams = {
+            searchId : this.searchId
+        };
         
         this.fire('search-page-success', {
             product: this.productName,
@@ -183,9 +186,6 @@ Polymer.SearchPageBehaviour = {
      */
     onSessionSave: function(e) {
         if (this.$.sessionStore.key === this._sessionKeys.searchId) {
-            this.queryParams = {
-                searchId : this.searchId
-            };
             this.fire('search-success', {
                 searchId: this.searchId
             });

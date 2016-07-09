@@ -15,7 +15,7 @@
 	                value: false
 	            },
 
-	            lastTouchY: {
+	            _lastTouchY: {
 	                type: Number,
 	                value: 0
 	            },
@@ -26,24 +26,29 @@
 	            }
 	        },
 
-	        touchStartHandler : function (e) {
+            listeners: {
+                'touchstart': '_touchStartHandler',
+                'touchmove': '_touchMoveHandler'
+            },
+
+	        _touchStartHandler : function (e) {
 		        if (e.touches.length != 1) return;
-		        this.lastTouchY = e.touches[0].clientY;
+		        this._lastTouchY = e.touches[0].clientY;
 		        // Pull-to-refresh will only trigger if the scroll begins when the
 		        // document's Y offset is zero.
-		        this.preventDefault = window.pageYOffset == 0 ? true : false;
+		        this.preventPullToRefresh = window.pageYOffset == 0 ? true : false;
     		},
 
-		    touchMoveHandler : function (e) {
+		    _touchMoveHandler : function (e) {
 		        if (this.stayOnPage) {
 		            var touchY = e.touches[0].clientY;
-		            var touchYDelta = touchY - this.lastTouchY;
-		            this.lastTouchY = touchY;
+		            var touchYDelta = touchY - this._lastTouchY;
+		            this._lastTouchY = touchY;
 
-		            if (this.preventDefault) {
-		                // To suppress pull-to-refresh it is sufficient to preventDefault the
+		            if (this.preventPullToRefresh) {
+		                // To suppress pull-to-refresh it is sufficient to preventPullToRefresh the
 		                // first overscrolling touchmove.
-		                this.preventDefault = false;
+		                this.preventPullToRefresh = false;
 		                if (touchYDelta > 0) {
 		                    e.preventDefault();
 		                    return;

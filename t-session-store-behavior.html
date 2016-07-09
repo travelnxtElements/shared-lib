@@ -23,12 +23,13 @@
         var sessionCount = 0;
 
         TravelNxt = window.TravelNxt || {};
+
         TravelNxt.Behaviors = TravelNxt.Behaviors || {};
+        
         TravelNxt.Behaviors.SessionBehavior = {
             properties: {
                 sessionKeys: {
-                    type: Array,
-                    observer: '_restoreSessionStorage'
+                    type: Array
                 },
 
                 providerId: {
@@ -37,14 +38,25 @@
                 }
             },
 
-            _restoreSessionStorage: function() {
+            restoreSessionStorage: function() {
                 if (!this.sessionKeys || !this.sessionKeys.length) {
-                    console.log("no session keys are provided!");
+                    console.warn("no session keys are provided!");
                 }
 
                 sessionCount = 0;
 
                 this._loadSession();
+            },
+
+            resetSessionStorage: function () {
+                if (!this.sessionKeys || !this.sessionKeys.length) {
+                    console.warn("no session keys are provided!");
+                }
+
+                sessionCount = 0;
+
+                this._resetSession();
+
             },
 
             _loadSession: function () {
@@ -55,16 +67,25 @@
                 this.$[this.providerId].load();
             },
 
+            _resetSession: function () {
+                if (sessionCount >= this.sessionKeys.length) {
+                    return;
+                }
+                this.$[this.providerId].key = this.sessionKeys[sessionCount].key;
+                this.$[this.providerId].value = null;
+                this.$[this.providerId].save();
+            },
+
             _onSessionLoad: function(e) {
 
                 if (!this.$[this.providerId].value) {
-                    console.log("Session value for key " + this.$[this.providerId].key + " not found!");
+                    console.warn("Session value for key " + this.$[this.providerId].key + " not found!");
                 }
 
                 var loadedSessionKey = this.sessionKeys[sessionCount];
 
                 if (!loadedSessionKey || !loadedSessionKey.propertyName) {
-                    console.log("Property name to restore session value not found!");
+                    console.warn("Property name to restore session value not found!");
                 }
 
                 this[loadedSessionKey.propertyName] = this.$[this.providerId].value;
@@ -73,6 +94,27 @@
                 this.$[this.providerId].loaded = false;
                 ++sessionCount;
                 this._loadSession();
+            },
+
+            _onSessionSave: function() {
+
+                if (this.$[this.providerId].value) {
+                    console.warn("Falied to reset session value for key " + this.$[this.providerId].key);
+                }
+
+                var loadedSessionKey = this.sessionKeys[sessionCount];
+
+                if (!loadedSessionKey || !loadedSessionKey.propertyName) {
+                    console.warn("Property name to restore session value not found!");
+                }
+
+                this[loadedSessionKey.propertyName] = this.$[this.providerId].value;
+
+                this.$[this.providerId].value = null;
+                this.$[this.providerId].loaded = false;
+                ++sessionCount;
+                this._resetSession();
+                
             }
         };
     })();

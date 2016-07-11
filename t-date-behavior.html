@@ -8,19 +8,28 @@
 
         },
 
-        _dateDiff: function(fromDate, toDate) {
+        _dateDiff: function(fromDate, toDate, skipSameDay) {
             if (!fromDate || !toDate)
                 return 0;
+
             if (typeof fromDate == 'string') {
                 fromDate = new Date(fromDate);
             }
+
             if (typeof toDate == 'string') {
                 toDate = new Date(toDate);
             }
+
             var diff = toDate - fromDate;
             var divideBy = (24 * 60 * 60 * 1000);
 
-            return Math.floor(diff / divideBy);
+            diff = Math.floor(diff / divideBy);
+
+            if (!skipSameDay) {
+                diff = diff > 0 ? diff : 1;
+            }
+
+            return diff;
         },
 
         _getTimeDiff: function(fromTime, toTime, is24Hour) {

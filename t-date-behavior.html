@@ -88,7 +88,9 @@
                 day: day,
                 date: date,
                 shortMonth: month.short,
-                fullMonth: month.full
+                fullMonth: month.full,
+                monthIndex: month.index,
+                year: year
             };
         },
         
@@ -102,40 +104,52 @@
 
     var monthMapping = [{
         short: 'Jan',
-        full: 'January'
+        full: 'January',
+        index:'01'
     }, {
         short: 'Feb',
-        full: 'February'
+        full: 'February',
+        index:'02'
     }, {
         short: 'Mar',
-        full: 'March'
+        full: 'March',
+        index:'03'
     }, {
         short: 'Apr',
-        full: 'April'
+        full: 'April',
+        index:'04'
     }, {
         short: 'May',
-        full: 'May'
+        full: 'May',
+        index:'05'
     }, {
         short: 'Jun',
-        full: 'June'
+        full: 'June',
+        index:'06'
     }, {
         short: 'Jul',
-        full: 'July'
+        full: 'July',
+        index:'07'
     }, {
         short: 'Aug',
-        full: 'August'
+        full: 'August',
+        index:'08'
     }, {
         short: 'Sep',
-        full: 'September'
+        full: 'September',
+        index:'09'
     }, {
         short: 'Oct',
-        full: 'October'
+        full: 'October',
+        index:'10'
     }, {
         short: 'Nov',
-        full: 'November'
+        full: 'November',
+        index:'11'
     }, {
         short: 'Dec',
-        full: 'December'
+        full: 'December',
+        index:'12'
     }];
 
     var daysOfWeek = [

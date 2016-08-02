@@ -1,0 +1,23 @@
+
+
+<script>
+TravelNxt = window.TravelNxt || {};
+TravelNxt.Behaviors = TravelNxt.Behaviors || {};
+TravelNxt.Behaviors.FormBehavior = {
+    properties: {},
+
+    /*
+     * <p>validation function</p>
+    */
+    validate: function() {
+        var check = true;
+        var requiredFields = this.querySelectorAll('[required]');
+        for (var i = 0; i < requiredFields.length; i++) {
+            if (!requiredFields[i].validate()) {
+                check = false;
+            }
+        }
+        return check;
+    }
+}
+</script>

@@ -137,7 +137,7 @@ Polymer.SearchPageBehaviour = {
     onSearch: function(e) {
         this._showProgress(true);
         this.searchedData = e.detail;
-        this.$.searchApi.search(e.detail);
+        //this.$.searchApi.search(e.detail);
         this._saveInSessionStore(this._sessionKeys.searchCriteria, e.detail);
     },
 

@@ -212,8 +212,8 @@ Polymer.SearchPageBehaviour = {
         if (!this.$.sessionStore.value) {
             return;
         }
-        this.searchedData = this.$.sessionStore.value;
-        var obj = this.searchedData,
+        //this.searchedData = this.$.sessionStore.value;
+        var obj = this.$.sessionStore.value,
             searchComp = this.$.searchView;
         setTimeout(function() {
             Object.keys(obj).forEach(function(key) {

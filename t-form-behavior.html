@@ -7,7 +7,14 @@ TravelNxt.Behaviors = TravelNxt.Behaviors || {};
 @polymerBehavior 
 */
 TravelNxt.Behaviors.FormBehavior = {
-    properties: {},
+    properties: {
+      /**
+        * Used to show text when the searching is in progress
+        */
+      productName: {
+        type: String
+      }
+    },
 
     /*
      * <p>validation function</p>
@@ -21,6 +28,17 @@ TravelNxt.Behaviors.FormBehavior = {
             }
         }
         return check;
+    },
+
+    showProgress: function(inProgress) {
+        if (inProgress) {
+            this.$.search.label = 'Searching ' + this.productName + 's...';
+            this.$.search.disabled = true;
+        } else {
+            this.$.search.label = 'Search ' + this.productName + 's';
+            this.$.search.disabled = false;
+        }
     }
+
 }
 </script>

@@ -1,4 +1,11 @@
+<!-- 
+    <h3>Details:</h3>
 
+        `TravelNxt.Behaviors.FormBehavior` is the reusable form behavior which we are using in all of our search components.
+        It contains function like validation and showProgress (state) of the form.
+
+
+ -->
 
 <script>
 TravelNxt = window.TravelNxt || {};
@@ -7,17 +14,18 @@ TravelNxt.Behaviors = TravelNxt.Behaviors || {};
 @polymerBehavior 
 */
 TravelNxt.Behaviors.FormBehavior = {
+
     properties: {
-      /**
-        * Used to show text when the searching is in progress
-        */
-      productName: {
-        type: String
-      }
+          /**
+            * Used to show text when the searching is in progress
+            */
+          productName: {    
+            type: String
+          }
     },
 
     /*
-     * <p>validation function</p>
+     * <p>The validate function will call validate method of all the required fields</p>
     */
     validate: function() {
         var check = true;
@@ -30,6 +38,10 @@ TravelNxt.Behaviors.FormBehavior = {
         return check;
     },
 
+    /*
+     * <p>Pass true/false as parameter of the method to show the loading state of the button of the form</p>
+     * <p>It disables the button and chage the text of the button of the search page.</p>
+    */
     showProgress: function(inProgress) {
         if (inProgress) {
             this.$.search.label = 'Searching ' + this.productName + 's...';

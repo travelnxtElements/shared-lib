@@ -4,63 +4,11 @@
 <!--
     <h3>Details:</h3>
 
-        `t-search-api` is a air search api component integrated with mystique apis.
+        `t-search-api` is fundamentally an ajax component which fires the xmlhttp request when you pass the data object to it. And this api is used in all search pages in the application.
+        
+        You have to pass the `api-base-url            api-relative-url            auth-token` to make it point to the url.
 
-        It fires mystique search call and returns `searchId` upon successful opearion
-
-    <h3>Object Structure:</h3>
-
-        1. This component uses following request format to search airs -
-
-            var request = {
-                productType": "Flight",
-                "Passengers": [
-                    {
-                        "quantity": data.adult,
-                        "type": "Adult",
-                        "ages": []
-                    },
-                    {
-                        "quantity": data.child,
-                        "type": "Child",
-                        "ages": []
-                    },
-                    {
-                        "quantity": 0,
-                        "type": "Senior",
-                        "ages": []
-                    },
-                    {
-                        "quantity": data.infant,
-                        "type": "Infant",
-                        "ages": []
-                    }
-                ],
-                "legs": [
-                    {
-                        "departureLocation": data.DepartureAirport,
-                        "includeNearByAirportsForDeparture": true,
-                        "arrivalLocation": data.ArrivalAirport,
-                        "includeNearByAirportsForArrival": true,
-                        "travelDate": {
-                            "date":  this._getFormattedDate(data.departureDate)
-                        }
-                    }
-                ],
-                "preferences": { "nonStopOnly": false, "cabinType": data.cabinType }
-            };
-            if (data.itineraryType === 'RoundTrip') {
-                request.legs[1] = {
-                    "departureLocation": data.ArrivalAirport,
-                    "includeNearByAirportsForDeparture": true,
-                    "arrivalLocation": data.DepartureAirport,
-                    "includeNearByAirportsForArrival": true,
-                    "travelDate": {
-                        "date":  this._getFormattedDate(data.arrivalDate)
-                    }
-
-                };
-            }
+        It uses 'iron-ajax' and 'TravelNxt.Behaviors.ProviderBehavior' internally to handle the request and respective events.
 
     <h3>Events:</h3>
 

@@ -11,48 +11,6 @@
 		TravelNxt.Behaviors.ConfirmationBehavior = {
 
             properties: {
-
-                /*
-                 * <p>This is a notification flag to indicate current page state</p>
-                 * <p>Set it to true if page needs to be displayed on browser</p>
-                */
-                visible: {
-                  type: Boolean,
-                  value: false,
-                  notify: true,
-                  observer: '_showConfirmation'
-                },
-
-                /*
-                 * <p>This string is query string containing token value</p>
-                */
-                authToken: {
-                    type: String,
-                    value: ''
-                },
-
-                /*
-                 * <p>This property holds the value of api base URL</p>
-                */
-                apiBaseUrl: {
-                    type: String,
-                    value: ''
-                },
-
-                /*
-                 * <p>This property holds the value of web api URL format</p>
-                */
-                apiUrlFormat: {
-                    type: String,
-                    value: ''
-                },
-
-                /*
-                 * <p>This property holds the value of booked itinerary</p>
-                */
-                bookedItinerary: {
-                    type: Object
-                },
             },
 
             observers:[

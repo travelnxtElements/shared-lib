@@ -12,38 +12,20 @@
             
 			properties:{
 
-				/*
-                 * <p>This is a notification flag to indicate current page state</p>
-                 * <p>Set it to true if page needs to be displayed on browser</p>
+                /*
+                 * <p>This property holds the value of booked itinerary</p>
                 */
-                visible: {
-                  type: Boolean,
-                  value: false,
-                  notify: true
+                bookedItinerary: {
+                    type: Object,
+                    notify: true
                 },
 
                 /*
-                 * <p>This string is query string containing token value</p>
+                 * <p>This is the timer value in milliseconds which is used to alter the processing message</p>
                 */
-                authToken: {
+                paymentTimer: {
                     type: String,
-                    value: ''
-                },
-
-                /*
-                 * <p>This property holds the value of api base URL</p>
-                */
-                apiBaseUrl: {
-                    type: String,
-                    value: ''
-                },
-
-                /*
-                 * <p>This property holds the value of web api URL format</p>
-                */
-                apiUrlFormat: {
-                    type: String,
-                    value: ''
+                    value: '10000'
                 },
 
                 /*
@@ -69,43 +51,6 @@
                 _showFullPageLoader: {
                     type: Boolean,
                     value: false
-                },
-
-                /*
-                 * <p>This is the timer value which is used to alter the processing message</p>
-                */
-                paymentTimer: {
-                    type: String,
-                    value: '10000'
-                },
-
-                /*
-                 * <p>This property holds the value of selected itinerary</p>
-                */
-                itinerary: {
-                    type: Object
-                },
-
-                /*
-                 * <p>This property holds the value of booked itinerary</p>
-                */
-                bookedItinerary: {
-                    type: Object,
-                    notify: true
-                },
-
-                /*
-                 * <p>This property holds the value of passenger info</p>
-                */
-                passengerInfo: {
-                    type: Object
-                },
-
-                /*
-                 * <p>This property holds the value of search criteria</p>
-                */
-                searchCriteria: {
-                  type: Object
                 }
 			},
 

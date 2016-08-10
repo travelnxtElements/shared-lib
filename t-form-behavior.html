@@ -1,24 +1,22 @@
-<!-- 
-    <h3>Details:</h3>
-
-        `TravelNxt.Behaviors.FormBehavior` is the reusable form behavior which we are using in all of our search components.
-        It contains function like validation and showProgress (state) of the form.
-
-
- -->
+<link rel="import" href="../polymer/polymer.html">
 
 <script>
 TravelNxt = window.TravelNxt || {};
 TravelNxt.Behaviors = TravelNxt.Behaviors || {};
-/*
-@polymerBehavior 
-*/
+
+/**
+* <h3>Details:</h3>
+*
+*  `TravelNxt.Behaviors.FormBehavior` is the reusable form behavior which we are using in all of our search components.
+*    It contains function like validation and showProgress (state) of the form.
+* @polymerBehavior TravelNxt.Behaviors.FormBehavior
+**/
 TravelNxt.Behaviors.FormBehavior = {
 
     properties: {
-          /**
-            * Used to show text when the searching is in progress
-            */
+      /**
+        * <p>Used to show button label when the searching is in progress</p>
+        */
           productName: {    
             type: String
           }
@@ -48,7 +46,7 @@ TravelNxt.Behaviors.FormBehavior = {
             this.$.search.disabled = true;
         } else {
             this.$.search.label = 'Search ' + this.productName + 's';
-            this.$.search.disabled = false;
+            this.$.search.disabled = false; 
         }
     }
 

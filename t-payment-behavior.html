@@ -56,7 +56,7 @@
 
             observers:[
                 '_visibleChange(visible)',
-                '_pageLoad(authToken, passengerInfo)'
+                '_pageLoad(authToken, passengerInfo, apiBaseUrl)'
             ],
 
             listeners: {
@@ -73,7 +73,7 @@
 
                 this.$.acceptance.checked = false;
                 
-                if (visible && (!this.itinerary || !this.passengerInfo || !this.searchCriteria || !this.authToken)) {
+                if (visible && (!this.passengerInfo  || !this.apiBaseUrl || !this.authToken)) {
                     this.fire('go-to-search');
                 }
 

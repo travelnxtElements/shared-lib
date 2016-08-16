@@ -14,8 +14,7 @@
             },
 
             observers:[
-                '_visibleChange(visible)',
-                '_pageLoad(authToken, passengerInfo)'
+                '_pageLoad(visible)'
             ],
 
             listeners: {
@@ -34,8 +33,8 @@
              * <p>this method gets called when page becomes visible</p>
              * <p>`go-to-search` event is fired if `bookedItinerary` property is not set.</p>
             */
-            _showConfirmation: function () {
-                if (!this.visible || !this.bookedItinerary) {
+            _pageLoad: function(visible) {
+                if (!visible || !this.bookedItinerary) {
                     this.fire('go-to-search');
                     return;
                 }
@@ -45,24 +44,8 @@
                 //initiate policy component
                 this.$.policy.initiatePolicyView();
 
-                this.$.itineraryDetails.setDetails(this.bookedItinerary.itinerary, this.bookedItinerary.searchCriteria);
                 this._setFareDetails();
 
-                this._getConfirmationMessage();
-            },
-
-            /*
-             * <p>This is the event handler for `t-sessionstorage` load component</p>
-            */
-            _onSessionLoad: function () {
-                if (!this.$.sessionStore.value) {
-                    this.$.notify.message = 'Booked itinerary not found!';
-                    this.$.notify.active = true;
-                    this.fire('confirmation-error');
-                    return;
-                }
-
-                this.bookedItinerary = this._translateItinerary(this.$.sessionStore.value);
                 this._getConfirmationMessage();
             },
 

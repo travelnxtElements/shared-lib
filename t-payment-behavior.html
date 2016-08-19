@@ -59,10 +59,6 @@
                 '_pageLoad(authToken, passengerInfo, apiBaseUrl)'
             ],
 
-            listeners: {
-                'policy-click': '_showPolicies'
-            },
-
             /*
              * <p>this method gets called when page becomes visible</p>
              * <p>`go-to-search` event is fired if `bookedItinerary` property is not set.</p>
@@ -76,17 +72,6 @@
                 if (visible && (!this.passengerInfo  || !this.apiBaseUrl || !this.authToken)) {
                     this.fire('go-to-search');
                 }
-
-                //initiate policy component
-                this.$.policy.initiatePolicyView();
-            },
-
-            /*
-             * <p>this method gets called when policy link in `t-car-itinerary-details` component is clicked.</p>
-             * <p>It is triggered by the `policy-click` listener.</p>
-            */
-            _showPolicies: function () {
-                this.$.policy.initiatePolicyCall();
             },
 
             /*

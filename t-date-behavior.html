@@ -88,7 +88,8 @@
             var year = dateString.getFullYear();
 
             return {
-                day: day,
+                day: day.full,
+                shortDay: day.short,
                 date: date,
                 shortMonth: month.short,
                 fullMonth: month.full,
@@ -155,15 +156,35 @@
         index:'12'
     }];
 
-    var daysOfWeek = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday"
-    ];
+    var daysOfWeek = [{
+        short: 'Sun',
+        full: 'Sunday',
+        index: 0
+    }, {
+        short: 'Mon',
+        full: 'Monday',
+        index: 1
+    }, {
+        short: 'Tue',
+        full: 'Tuesday',
+        index: 2
+    }, {
+        short: 'Wed',
+        full: 'Wednesday',
+        index: 3
+    }, {
+        short: 'Thu',
+        full: 'Thursday',
+        index: 4
+    }, {
+        short: 'Fri',
+        full: 'Friday',
+        index: 5
+    }, {
+        short: 'Sat',
+        full: 'Saturday',
+        index: 6
+    }];
 
 })();
 </script>

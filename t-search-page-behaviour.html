@@ -93,8 +93,13 @@ Polymer.SearchPageBehaviour = {
 
     _visibleChanged: function(visible) {
         if (visible) {
-            this._showProgress(false);
-            this.fire('change-section');
+            //todo: I have no clue how this visible change gets truggered when I am trying to load other page component with a different route!
+            //I didn't have any option but to add following hack, need to find out the reason and then the solution for this problem
+            var pathSegments = window.location.pathname.split('/');
+            if (pathSegments && pathSegments.length && (pathSegments[pathSegments.length - 1] === 'home' || pathSegments[pathSegments.length - 1] === '')) {
+                this._showProgress(false);
+                this.fire('change-section');
+            }
         }
     },
     /*

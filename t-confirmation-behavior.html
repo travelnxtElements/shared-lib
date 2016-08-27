@@ -1,20 +1,20 @@
 <script>
-	(function () {
+    (function () {
 
-		'use strict'
+        'use strict'
 
-		var TravelNxt = window.TravelNxt || {};
-		TravelNxt.Behaviors = window.TravelNxt.Behaviors || {};
+        var TravelNxt = window.TravelNxt || {};
+        TravelNxt.Behaviors = window.TravelNxt.Behaviors || {};
         /*
         @polymerBehavior 
         */
-		TravelNxt.Behaviors.ConfirmationBehavior = {
+        TravelNxt.Behaviors.ConfirmationBehavior = {
 
             properties: {
             },
 
-            observers:[
-                '_pageLoad(visible)'
+            observers: [
+                '__pageLoad(visible)'
             ],
 
             listeners: {
@@ -33,7 +33,7 @@
              * <p>this method gets called when page becomes visible</p>
              * <p>`go-to-search` event is fired if `bookedItinerary` property is not set.</p>
             */
-            _pageLoad: function(visible) {
+            __pageLoad: function (visible) {
                 if (!visible || !this.bookedItinerary) {
                     this.fire('go-to-search');
                     return;
@@ -89,8 +89,8 @@
                 }
                 var str = Array.prototype.slice.call(arguments);
                 str = str.join(' ');
-                return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function(letter, index) {
-                return letter.toUpperCase();
+                return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function (letter, index) {
+                    return letter.toUpperCase();
                 }).replace(/\s+/g, ' ');
             },
 
@@ -105,13 +105,13 @@
 
                 if (passengerSegment.vendorConfirmationNumber) {
                     return passengerSegment.vendorConfirmationNumber;
-                } else if(passengerSegment.confirmationNumber) {
+                } else if (passengerSegment.confirmationNumber) {
                     return passengerSegment.confirmationNumber;
                 } else {
                     return this.bookedItinerary.confirmationNumber;
                 }
             }
-		};
-		
-	})();
+        };
+
+    })();
 </script>

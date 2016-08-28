@@ -13,12 +13,49 @@
             properties: {
             },
 
-            observers: [
+            observers:[
                 '__pageLoad(visible)'
             ],
 
             listeners: {
-                'policy-click': '_showPolicies'
+                'policy-click': '_showPolicies',
+                'session-get-complete': '_updatePage'
+            },
+
+            /*
+             * <p>this method gets called when page becomes visible</p>
+             * <p>`go-to-search` event is fired if `bookedItinerary` property is not set.</p>
+            */
+            __pageLoad: function(visible) {
+                if (!visible) {
+                    return;
+                }
+                this.$.notify.active = false;
+
+                //initiate policy component
+                this.$.policy.initiatePolicyView();
+
+                this._syncSession();
+            },
+
+            _syncSession: function () {
+                this._data = [{
+                    key: 'Car_Booked_Itinerary',
+                    propertyName: 'bookedItinerary'
+                }];
+                this.getSession();
+            },
+
+            _updatePage: function  () {
+
+                if (!this.bookedItinerary) {
+                    this.fire('go-to-search');
+                    return;
+                }
+
+                this._setFareDetails();
+
+                this._getConfirmationMessage();
             },
 
             /*
@@ -27,26 +64,6 @@
             */
             _showPolicies: function () {
                 this.$.policy.initiatePolicyCall();
-            },
-
-            /*
-             * <p>this method gets called when page becomes visible</p>
-             * <p>`go-to-search` event is fired if `bookedItinerary` property is not set.</p>
-            */
-            __pageLoad: function (visible) {
-                if (!visible || !this.bookedItinerary) {
-                    this.fire('go-to-search');
-                    return;
-                }
-
-                this.$.notify.active = false;
-
-                //initiate policy component
-                this.$.policy.initiatePolicyView();
-
-                this._setFareDetails();
-
-                this._getConfirmationMessage();
             },
 
             /*
@@ -99,6 +116,11 @@
              * <p>`confirmationNumber` is displayed if `vendorConfirmationNumber` is not available</p>
             */
             _getConfirmationNumber: function (passengerSegment) {
+
+                if (!this.visible) {
+                    return;
+                }
+
                 if (!passengerSegment) {
                     return this.bookedItinerary.confirmationNumber;
                 }

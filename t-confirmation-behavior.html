@@ -11,6 +11,13 @@
         TravelNxt.Behaviors.ConfirmationBehavior = {
 
             properties: {
+                /**
+                 * Stores confirmation number
+                 * @type {String}
+                 */
+                confirmationNumber: {
+                    type: String
+                }
             },
 
             observers:[
@@ -56,6 +63,8 @@
                 this._setFareDetails();
 
                 this._getConfirmationMessage();
+
+                this._setConfirmationNumber();
             },
 
             /*
@@ -115,22 +124,22 @@
              * <p>This method extracts confirmation number from booked itinerary</p>
              * <p>`confirmationNumber` is displayed if `vendorConfirmationNumber` is not available</p>
             */
-            _getConfirmationNumber: function (passengerSegment) {
+            _setConfirmationNumber: function () {
 
-                if (!this.visible) {
+                if (!this.bookedItinerary.passengerSegment) {
+                    this.confirmationNumber = this.bookedItinerary.confirmationNumber;
+                    return
+                }
+
+                if (this.bookedItinerary.passengerSegment.vendorConfirmationNumber) {
+                    this.confirmationNumber = this.bookedItinerary.passengerSegment.vendorConfirmationNumber;
                     return;
-                }
-
-                if (!passengerSegment) {
-                    return this.bookedItinerary.confirmationNumber;
-                }
-
-                if (passengerSegment.vendorConfirmationNumber) {
-                    return passengerSegment.vendorConfirmationNumber;
-                } else if (passengerSegment.confirmationNumber) {
-                    return passengerSegment.confirmationNumber;
+                } else if (this.bookedItinerary.passengerSegment.confirmationNumber) {
+                    this.confirmationNumber = this.bookedItinerary.passengerSegment.confirmationNumber;
+                    return;
                 } else {
-                    return this.bookedItinerary.confirmationNumber;
+                    this.confirmationNumber = this.bookedItinerary.confirmationNumber;
+                    return;
                 }
             }
         };
